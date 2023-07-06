@@ -1,0 +1,21 @@
+@using AztecTariff.Models;
+@layout TelerikLayout
+@inherits LayoutComponentBase
+@inject Settings settings
+<PageTitle>AztecTariff</PageTitle>
+
+<div class="page overflow-hidden" style="height:100vh;">
+    @if (settings.IsLoggedIn)
+    {
+        <div class="bg-primary mybs" style="height:100vh">
+            <NavMenu />
+        </div>
+    }
+
+    <main style="overflow-x:hidden;">
+
+        <div style="height:100%">
+            @Body
+        </div>
+    </main>
+</div>

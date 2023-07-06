@@ -1,0 +1,184 @@
+﻿@page "/"
+
+@inject IDbContextFactory<ApplicationDBContext> DbFactory
+
+@inject Settings settings
+@inject NavigationManager nav
+
+
+@using AztecTariff.Data;
+@using AztecTariff.Models;
+@using AztecTariff.Services;
+@using Blazorise.Animate;
+@using Microsoft.EntityFrameworkCore;
+
+<PageTitle>Hypothetical Login Page</PageTitle>
+
+@if (isLoading)
+{
+    <LoadingOverlayComponent></LoadingOverlayComponent>
+}
+
+<div class="hero h-100">
+    <div class="cube"></div>
+    <div class="cube"></div>
+    <div class="cube"></div>
+    <div class="cube"></div>
+    <div class="cube"></div>
+    <div class="cube"></div>
+    <div class="cube"></div>
+    <div class="cube"></div>
+    <div class="cube"></div>
+    <div class="cube"></div>
+    <div class="d-flex flex-row justify-content-center align-items-center h-100 hero__title">
+        @if (settings.IsLoggedIn)
+        {
+            <img src="images/Zonal-logo-MW.svg" />
+        }
+        else
+        {
+            <div class="bg-primary d-flex flex-column justify-content-center align-items-center rounded mybs p-5">
+                <div class="justify-content-center align-items-center rounded d-flex flex-column my-5">
+                    <div class="container">
+                        <div class="row">
+                            <div>
+                                <div class="d-flex flex-row justify-content-center align-items-center mb-4">
+                                    <img src="images/Zonal-logo-MW.svg" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col d-flex flex-column justify-content-center">
+                                <p class="my-auto" style="font-size:32px">Username:</p>
+                            </div>
+                            <div class="col d-flex flex-column justify-content-center" onkeydown="@Enter">
+                                <TelerikTextBox @bind-Value="username" Class="@usernameErrorClass"  />
+                            </div>
+                        </div>
+                        @if (usernameError)
+                        {
+                            <Blazorise.Animate.Animate Animation="Animations.SlideDown">
+                            <div class="d-flex flex-column justify-content-center text-center">
+                                <label class="text-danger fs-6">Username is not valid</label>
+                            </div>
+                            </Blazorise.Animate.Animate>
+                        }
+                        <div class="row">
+                            <div class="col d-flex flex-column justify-content-center">
+                                <p class="my-auto" style="font-size:32px">Password:</p>
+                            </div>
+                            <div class="col d-flex flex-column justify-content-center" onkeydown="@Enter">
+                                <TelerikTextBox @bind-Value="password" Password="true" Class="@passwordErrorClass" />
+                            </div>
+                        </div>
+                        @if (passwordError)
+                        {
+                            <Blazorise.Animate.Animate Animation="Animations.SlideDown">
+                            <div class="d-flex flex-column justify-content-center text-center">
+                                <label class="text-danger fs-6">Password is not valid</label>
+                            </div>
+                            </Blazorise.Animate.Animate>
+                        }
+                        <div class="row">
+                            <div>
+                                <div class="d-flex flex-row justify-content-center align-items-center mt-5 mb-2">
+                                    <button class="btn text-light bg-primary-alt" @onclick=LogIn>LOGIN</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+
+
+@code {
+    bool isLoading;
+    CategoryService categoryService;
+    SiteService siteService;
+    ProductService productService;
+    string username;
+    string password;
+    bool usernameError;
+    bool passwordError;
+    string usernameErrorClass => (usernameError) ? "border-danger border" : "";
+    string passwordErrorClass => (passwordError) ? "border-danger border" : "";
+
+    protected override void OnInitialized()
+    {
+        categoryService = new CategoryService(DbFactory.CreateDbContext());
+        productService = new ProductService(DbFactory.CreateDbContext());
+        siteService = new SiteService(DbFactory.CreateDbContext());
+        usernameError = false;
+        passwordError = false;
+        base.OnInitialized();
+    }
+
+    private async Task LogIn()
+    {
+        isLoading = true;
+        await Task.Delay(1);
+        Thread.Sleep(5000);
+        settings.IsLoggedIn = LoginDetailsValid();
+        isLoading = false;
+        await Task.Delay(1);
+        if (settings.IsLoggedIn)
+        {
+            nav.NavigateTo("/SiteTariff");
+        }
+
+    }
+
+    private async void Populatedatabase()
+    {
+        var ds = new DrinkListCreatorService();
+        ds.CreateCSVFiles();
+        await productService.PopulateProductsTable();
+        await categoryService.PopulateCategoriesTable();
+        await siteService.PopulateSiteTable();
+        await productService.PopulateProductsMappingTable();
+    }
+
+    public bool LoginDetailsValid()
+    {
+        if (string.IsNullOrWhiteSpace(username))
+        {
+            usernameError = true;
+        }
+        else
+        {
+            usernameError = false;
+        }
+
+        if (string.IsNullOrWhiteSpace(password))
+        {
+            passwordError = true;
+        }
+        else
+        {
+            passwordError = false;
+        }
+
+
+        if (usernameError || passwordError)
+        {
+            return false;
+        }
+        else
+        {
+            return true;
+        }
+    }
+
+    private void Enter(KeyboardEventArgs e)
+    {
+        if(e.Code == "Enter" || e.Code == "NumpadEnter")
+        {
+            LogIn();
+        }
+    }
+
+}

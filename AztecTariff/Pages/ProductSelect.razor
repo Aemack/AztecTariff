@@ -1,0 +1,344 @@
+﻿@page "/ProductSelect"
+@using AztecTariff.Data;
+@using AztecTariff.Models;
+@using AztecTariff.Services;
+@using Microsoft.EntityFrameworkCore;
+@using Telerik.FontIcons;
+@inject IDbContextFactory<ApplicationDBContext> DbFactory
+
+
+@if (isLoading)
+{
+    <LoadingOverlayComponent></LoadingOverlayComponent>
+} 
+    
+
+
+<div @ref="wrapper" class="wrapper" style="height:100%">
+    <div class="position-absolute  bottom-0 end-0 m-4">
+        <button class="btn btn-primary" style="border-radius:10px;" @onclick="SaveClicked"> <TelerikFontIcon Icon="FontIcon.Save"></TelerikFontIcon> </button>
+    </div>
+
+    <div class="position-absolute bottom-0 end-0">
+    <ToastNotification  @ref="Toast" ></ToastNotification>
+    </div>
+    <div class="container-fluid p-0" style="height:100%;">
+        <div class="row m-0" style="height:100%;">
+            <TelerikGrid class="col m-0 p-0" Data="@Categories"
+                         SelectionMode="GridSelectionMode.Single"
+                         Pageable="false"
+                        @ref="@CategoryGridRef"
+                         EditMode="@GridEditMode.Popup"
+                         OnUpdate="@UpdateHandler"
+                         SelectedItemsChanged="@((IEnumerable<FullCategory> Headings) => OnHeadingSelect(Headings))">
+
+                <GridColumns>                   
+                        <GridColumn Width="80%" >
+                            <Template>
+                            @{
+                                var b = (FullCategory)context;
+                                Console.WriteLine(b.APIId);
+                                <div class="row ">
+
+                                    <div @onclick="@(() => EditCategory(b, b.APIId))" style="cursor:pointer;" class="m-auto p-0 col d-flex justify-content-center">
+                                            <TelerikFontIcon class="m-auto" Icon="@FontIcon.Pencil"></TelerikFontIcon>
+                                    </div>
+
+                                    <p style="cursor:pointer;" class="col-10 my-auto px-0">@b.Name</p>
+                                        
+                                    </div>
+                                }
+
+                            </Template>
+                            <EditorTemplate>
+                            @{
+                                var b = (FullCategory)context;
+                                <div class="d-flex flex-column justify-content-center align-items-center">
+                                    <TelerikTextBox @bind-Value="@b.Name" />
+                                </div>
+                            }
+                            </EditorTemplate>
+                            <HeaderTemplate>
+                                
+                                Categories
+                                
+                            </HeaderTemplate>
+                        </GridColumn>
+                    
+                    <GridColumn Width="30%">
+                        <Template>
+                            @{
+                                var b = (FullCategory)context;
+                                <div class="d-flex justify-content-center">
+                                @if(b.AllSelected)
+                                {
+                                        <input class="form-check-input bg-primary" @bind="b.AllSelected" @onclick="() => {CategoryCheckboxClicked(b);}" type="checkbox" />
+                                } else
+                                {
+                                        <input class="form-check-input bg-primary" @bind="b.AllSelected" @onclick="() => {CategoryCheckboxClicked(b);}" type="checkbox" />
+                                }
+                                </div>
+                            }
+                        </Template>
+                        <HeaderTemplate>
+                            <div class="d-flex justify-content-center">
+                                <input class="form-check-input bg-primary" @bind="@AllSelected" @onclick="() => {SelectAll();}" type="checkbox" />
+                            </div>
+                        </HeaderTemplate>
+
+                    </GridColumn>
+                </GridColumns>
+            </TelerikGrid>
+
+            <TelerikGrid class="col m-0 p-0" Data="@SelectedCategory.Products"
+                         SelectionMode="GridSelectionMode.Multiple"
+                         Pageable="false"
+                         SelectedItems="SelectedProducts">
+                <GridColumns>
+                    <GridColumn Field="ProductName" Title="Products" />
+                    <GridColumn>
+                        <Template>
+                            @{
+                                var b = (Product)context;
+                                <div class="d-flex justify-content-center">
+                                    @if (b.Included)
+                                    {
+                                        <input class="form-check-input bg-primary" @bind="b.Included" @onclick="() => {ProductCheckboxClicked(b);}" type="checkbox" />
+                                    } else
+                                    {
+                                        <input class="form-check-input" @bind="b.Included" @onclick="() => {ProductCheckboxClicked(b);}" type="checkbox" />
+                                    }
+                                </div>
+                            }
+                        </Template>
+                    </GridColumn>
+                </GridColumns>
+            </TelerikGrid>
+
+            <div class="col m-0 p-0 ">
+                <table class="m-0 p-0 k-grid-header-table k-table k-table-md slideInUp bg-light">
+                    <thead class="k-table-thead">
+                        <tr class="k-table-row">
+                            <th class="k-header k-touch-action-none k-table-th ">
+                                Selected Products
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="k-table-tbody">
+                        @{
+                            rowCount = 0; 
+                        }
+                        @foreach (var cd in Categories)
+                        {
+                            <tr class="k-master-row @((rowCount++ % 2 ==0) ? "bg-primary text-light" : "bg-primary-alt text-light")">
+                                <td class="k-table-td col-8 d-flex flex-row">
+                                    <div @onclick="@(() => CategoryClicked(cd))" class="k-table-td col" style="cursor:pointer;">
+                                        @if (OpenHeadings.Contains(cd))
+                                            {
+                                                <TelerikFontIcon class="openchevron" Icon="@FontIcon.ChevronUp"></TelerikFontIcon>
+                                            } else
+                                            {
+                                                <TelerikFontIcon class="closedchevron" Icon="@FontIcon.ChevronUp"></TelerikFontIcon>
+                                            }
+                                    </div>
+                                    <span class="m-auto px-1 col-9">@cd.Name</span>
+                                </td>
+                                <td class="k-table-td col">@cd.Products.Where(p => p.Included).Count() / @cd.Products.Count()</td>
+                            </tr>
+                            @if (OpenHeadings.Contains(cd))
+                            {
+                                @foreach (var p in cd.IncludedProducts)
+                                {
+                                    <tr class="k-master-row @((rowCount++ % 2 ==0) ? "k-alt k-table-alt-row" : "k-table-row")">
+                                        <td class="k-table-td col-9">@p.ProductName</td>
+                                        <td class="k-table-td col-3">£@p.Price.ToString("F")</td>
+                                        @*<td class="k-table-td col"></td>*@
+                                    </tr>
+                                }
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    List<FullCategory> Categories = new List<FullCategory>();
+    TelerikGrid<FullCategory> CategoryGridRef;
+    ElementReference wrapper;
+    int rowCount = 0;
+    List<FullCategory> OpenHeadings = new List<FullCategory>();
+    List<FullCategory> SelectedCategories = new List<FullCategory>();
+    List<Product> SelectedProducts = new List<Product>();
+    FullCategory SelectedCategory = new FullCategory();
+    private bool AllSelected;
+    bool isLoading;
+    ToastNotification Toast;
+
+    ProductService productService;
+    CategoryService categoryService;
+
+    protected override async Task OnInitializedAsync()
+    {
+        isLoading = true;
+        productService = new ProductService(DbFactory.CreateDbContext());
+        categoryService = new CategoryService(DbFactory.CreateDbContext());
+        await Task.Delay(1);
+        await LoadCategories();
+        isLoading = false;
+        await Task.Delay(1);
+        //return base.OnAfterRenderAsync(firstRender);
+    }
+
+
+    public async Task LoadCategories()
+    {
+
+        Categories = await categoryService.GetAllFullCategories();
+        UpdateSelectAllCheckboxes();
+        LoadSelectedProducts();
+
+    }
+
+    public void CategoryCheckboxClicked(FullCategory cat)
+    {
+        isLoading = true;
+        cat.AllSelected = !cat.AllSelected;
+        foreach(var p in cat.Products)
+        {
+            p.Included = cat.AllSelected ;
+        }
+        UpdateSelectAllCheckboxes();
+        isLoading = false;
+    }
+
+    public void OnHeadingSelect(IEnumerable<FullCategory> cat)
+    {
+        if (cat.Count() == 0) return;
+        SelectedCategory = cat.First();
+    }
+
+    public void SelectAll()
+    {
+        isLoading = true;
+        AllSelected = !AllSelected;
+        foreach(var cat in Categories)
+        {
+            foreach (var prod in cat.Products)
+            {
+                prod.Included = AllSelected;
+            }
+        }
+        UpdateSelectAllCheckboxes();
+        isLoading = false;
+    }
+
+    private async void UpdateHandler(GridCommandEventArgs args)
+    {
+        isLoading = true;
+        var fullcat = (FullCategory)args.Item;
+        var cat = Categories.Where(c => c.APIId == fullcat.Products.FirstOrDefault().CategoryId).FirstOrDefault();
+        if (cat != null) cat.Name = fullcat.Name;
+        isLoading = false;
+
+    }
+
+    public void CategoryClicked(FullCategory fullCategory)
+    {
+        isLoading = true;
+        if (OpenHeadings.Contains(fullCategory))
+        {
+            OpenHeadings.Remove(fullCategory);
+        } else
+        {
+            OpenHeadings.Add(fullCategory);
+        }
+        isLoading = false;
+    }
+
+    public async Task EditCategory(FullCategory fullCategory, int id)
+    {
+        var currState = CategoryGridRef.GetState();
+        currState.EditItem = null;
+        currState.OriginalEditItem = null;
+
+        FullCategory itemToEdit = FullCategory.GetClonedInstance(fullCategory);
+
+        currState.EditItem = itemToEdit;
+        currState.OriginalEditItem = fullCategory;
+
+        await CategoryGridRef.SetStateAsync(currState);
+
+    }
+
+    public void ProductCheckboxClicked(Product p)
+    {
+        isLoading = true;
+        p.Included = !p.Included;
+
+        UpdateSelectAllCheckboxes();
+        isLoading = false;
+    }
+
+    public void UpdateSelectAllCheckboxes()
+    {
+        foreach(var cat in Categories)
+        {
+            if (cat.Products.Count() ==  cat.Products.Where(p => p.Included == true).Count())
+            {
+                cat.AllSelected = true;
+            } else
+            {
+                cat.AllSelected = false;
+            }
+
+        }
+
+        if (Categories.Count() == Categories.Where(c => c.AllSelected == true).Count())
+        {
+            AllSelected = true;
+        } else
+        {
+            AllSelected = false;
+        }
+    }
+
+    public async void SaveClicked()
+    {
+        isLoading = true;
+        try
+        {
+            await Task.Delay(1);
+            await SaveCategories();
+            isLoading = false;
+            await Task.Delay(1);
+            await InvokeAsync(() => StateHasChanged());
+
+            await Toast.DisplayMessage("Succesfully Updated Categories", "bg-green");
+        }
+        catch
+        {
+            await Toast.DisplayMessage("Failed To Update Categories", "bg-red");
+        }
+
+    }
+
+    public async Task SaveCategories()
+    {
+        await categoryService.UpdateCategories(Categories);
+    }
+
+    private void LoadSelectedProducts()
+    {
+        SelectedCategories = new List<FullCategory>();
+        foreach (var cat in Categories)
+        {
+            if (cat.IncludedProducts.Count > 0)
+            {
+                SelectedCategories.Add(cat);
+            }
+        }
+    }
+}

@@ -1,0 +1,260 @@
+﻿@page "/SiteTariff"
+@using AztecTariff.Data;
+@using AztecTariff.Models;
+@using AztecTariff.Services;
+@using Microsoft.EntityFrameworkCore;
+@using Telerik.FontIcons;
+@inject IDbContextFactory<ApplicationDBContext> DbFactory
+
+
+
+@if (isLoading)
+{
+    <LoadingOverlayComponent></LoadingOverlayComponent>
+}
+
+@*List of Sites*@
+<div class="container-fluid" style="height:100%">
+    <div class="row p-0" style="height:100vh">
+        <TelerikGrid class="col p-0" Data="@Sites" @ref="SiteGrid"
+                     SelectionMode="GridSelectionMode.Single"
+                     Pageable="false"
+                     OnRowDrop="@((GridRowDropEventArgs<FullSite> args) => SiteMoved(args))"
+                     SelectedItemsChanged="@((IEnumerable<FullSite> site) => OnSiteSelect(site.First()))">
+
+            <GridColumns>
+                <GridColumn Field="Name" Title="Site" />
+            </GridColumns>
+        </TelerikGrid>
+
+
+
+        @*List by cats*@
+        <TelerikGrid class="col p-0" Data="@SelectedSite.Categories" @ref="CatGrid"
+                     SelectionMode="GridSelectionMode.None"
+                     Pageable="false"
+                     RowDraggable="true"
+                     OnRowDrop="@((GridRowDropEventArgs<FullCategory> args) => CategoryMoved(args))">
+            <RowTemplate Context="category">
+                <td class="k-table-td row ">
+                    <div class="row p-2">
+                        @if (SelectedCategory == category)
+                        {
+                            <div @onclick="@(() => CategoryClicked(category))" class="col" style="cursor:pointer;">
+                                <TelerikFontIcon class="openchevron" Icon="@FontIcon.ChevronUp"></TelerikFontIcon>
+                            </div>
+                        }
+                        else
+                        {
+                            <div @onclick="@(() => CategoryClicked(category))" class="col" style="cursor:pointer;">
+                                <TelerikFontIcon class="closedchevron" Icon="@FontIcon.ChevronUp"></TelerikFontIcon>
+                            </div>
+                        }
+
+                        <span class="col-10">@category.Name</span>
+                        @if (category.Products.Count != 0)
+                        {
+                            <input class="col" @bind="@category.AllSelected" type="checkbox" style="height:15px;" @onclick="() => {CategoryCheckboxClicked(category);}" />
+                        }
+                        else
+                        {
+                            <input class="col" @bind="@category.AllSelected" type="checkbox" style="height:15px;" @onclick="() => {CategoryCheckboxClicked(category);}" disabled />
+                        }
+                    </div>
+                    @{
+                        subRowCount = 0;
+                    }
+                    @if (SelectedCategory == category)
+                    {
+                        //if empty, show empty message
+                        @foreach (var p in category.Products)
+                        {
+                            <div class="@((subRowCount++ % 2 ==0) ? "k-alt k-table-alt-row" : "k-table-row")">
+                                <div class="container-fluid" style="padding:0px 0px 0px 25px; cursor:default;">
+                                    <Animate Animation=Animations.SlideDown>
+                                        <div class="row">
+                                            <span class="col-9" style="font-size: 14px;">@p.ProductName</span>
+                                            <input class="col m-auto" @bind="p.Included" type="checkbox" style="height:15px;" @onclick="() => {ProductCheckboxClicked(p);}" />
+                                        </div>
+                                    </Animate>
+                                </div>
+                            </div>
+                        }
+                    }
+                </td>
+            </RowTemplate>
+            <GridColumns>
+                <GridColumn Title="Categories" />
+            </GridColumns>
+        </TelerikGrid>
+
+
+        @*PDF Viewer*@
+        <TelerikPdfViewer class="col p-0 pdfviewer"
+                          Zoom=0.75m
+                          Data="@PdfSource">
+            <PdfViewerToolBar>
+
+                <PdfViewerToolBarSeparator />
+
+                <PdfViewerToolBarDownloadTool />
+                <PdfViewerToolBarPrintTool />
+
+
+                <PdfViewerToolBarSpacer />
+
+                <PdfViewerToolBarZoomTool />
+                <PdfViewerToolBarSelectionTool />
+                <PdfViewerToolBarSearchTool />
+            </PdfViewerToolBar>
+        </TelerikPdfViewer>
+    </div>
+</div>
+
+
+@code {
+    int rowCount;
+    int subRowCount;
+    string docname;
+    TelerikGrid<FullSite> SiteGrid;
+    TelerikGrid<FullCategory> CatGrid;
+    byte[] PdfSource;
+    List<FullSite> Sites = new List<FullSite>();
+    FullCategory SelectedCategory = new FullCategory();
+    FullSite SelectedSite = new FullSite();
+    PDFMakerService pDFMaker;
+    bool isLoading;
+
+    SiteService siteService;
+
+    protected override async Task OnInitializedAsync()
+    {
+        isLoading = true;
+        siteService = new SiteService(DbFactory.CreateDbContext());
+        await Task.Delay(1);
+        pDFMaker = new PDFMakerService();
+        await LoadSites();
+        UpdateAllSelected();
+        isLoading = false;
+        await Task.Delay(1);
+    }
+
+
+    private async Task LoadSites()
+    {
+        isLoading = true;
+        Sites = await siteService.GetAllFullSites();
+        isLoading = false;
+    }
+
+    private async Task ProductCheckboxClicked(Product product)
+    {
+        isLoading = true;
+        product.Included = !product.Included;
+        UpdateAllSelected();
+        await UpdatePDF();
+        isLoading = false;
+
+    }
+
+    private void CategoryClicked(FullCategory category)
+    {
+        if (SelectedCategory == category)
+        {
+            SelectedCategory = new FullCategory();
+        }
+        else
+        {
+            SelectedCategory = category;
+        }
+    }
+
+    private async void CategoryCheckboxClicked(FullCategory category)
+    {
+        category.AllSelected = !category.AllSelected;
+        foreach (var p in category.Products)
+        {
+            p.Included = category.AllSelected;
+        }
+        //UpdateAllSelected();
+
+        await UpdatePDF();
+    }
+
+    private void UpdateAllSelected()
+    {
+        foreach (var cat in SelectedSite.Categories)
+        {
+            if (cat.IncludedProducts.Count == cat.Products.Count)
+            {
+                cat.AllSelected = true;
+            }
+            else
+            {
+                cat.AllSelected = false;
+            }
+        }
+    }
+
+
+    private async Task OnSiteSelect(FullSite site)
+    {
+        isLoading = true;
+        PDFMakerService pDFMaker = new PDFMakerService();
+        SiteGrid.SelectedItems = new List<FullSite>();
+        SelectedSite = site;
+        UpdateAllSelected();
+        await UpdatePDF();
+        isLoading = false;
+    }
+
+    public async Task UpdatePDF()
+    {
+        docname = await pDFMaker.MakePdf(SelectedSite);
+        if (string.IsNullOrWhiteSpace(docname)) return;
+        Byte[] fileBytes = File.ReadAllBytes(@$"Data\{docname}");
+        var content = Convert.ToBase64String(fileBytes);
+        if (PdfSource == Convert.FromBase64String(content))
+        {
+            Console.WriteLine("Same thing");
+        }
+        PdfSource = Convert.FromBase64String(content);
+    }
+
+    public void SiteMoved(GridRowDropEventArgs<FullSite> args)
+    {
+        if (args.Item != null)
+        {
+            var newIndex = (args.DropPosition == GridRowDropPosition.Before) ? int.Parse(args.DestinationIndex) - 1 : int.Parse(args.DestinationIndex);
+            var oldIndex = Sites.IndexOf(args.Item);
+            if (oldIndex > -1)
+            {
+                Sites.RemoveAt(oldIndex);
+
+                if (newIndex > oldIndex) newIndex--;
+                // the actual index could have shifted due to the removal
+
+                Sites.Insert(newIndex, args.Item);
+            }
+        }
+    }
+
+    public async Task CategoryMoved(GridRowDropEventArgs<FullCategory> args)
+    {
+        if (args.Item != null)
+        {
+            var newIndex = (args.DropPosition == GridRowDropPosition.Before) ? int.Parse(args.DestinationIndex) - 1 : int.Parse(args.DestinationIndex);
+            var oldIndex = SelectedSite.Categories.IndexOf(args.Item);
+            if (oldIndex > -1)
+            {
+                SelectedSite.Categories.RemoveAt(oldIndex);
+
+                if (newIndex > oldIndex) newIndex--;
+                // the actual index could have shifted due to the removal
+
+                SelectedSite.Categories.Insert(newIndex, args.Item);
+                await UpdatePDF();
+            }
+        }
+    }
+}

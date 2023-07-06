@@ -1,0 +1,39 @@
+﻿<div class="top-row navbar m-auto">
+    <div class="container-fluid overflow-hidden">
+        <a class="navbar-brand m-auto" href="SiteTariff"><img src="images/zonallogo.png" width="90" height="27" class="d-inline-block align-top" alt="zonal logo" /></a>
+        <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+    </div>
+</div>
+
+<div style="height:95%" >
+    <nav class="d-flex flex-column h-100">
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="SiteTariff" Match="NavLinkMatch.All">
+                <span class="oi oi-home" aria-hidden="true"></span> Site Tariff
+            </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="ProductSelect">
+                <span class="oi oi-plus" aria-hidden="true"></span> Product List
+            </NavLink>
+        </div>
+        <div class="nav-item mt-auto px-3">
+            <NavLink class="nav-link" href="Settings">
+                <span class="oi oi-plus" aria-hidden="true"></span> Settings
+            </NavLink>
+        </div>
+    </nav>
+</div>
+
+@code {
+    private bool collapseNavMenu = true;
+
+    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+    private void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+    }
+}
