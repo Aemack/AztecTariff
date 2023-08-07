@@ -1,5 +1,6 @@
 ﻿using AztecTariff.Models;
 using CsvHelper;
+using System;
 using System.Formats.Asn1;
 using System.Globalization;
 using System.Net.NetworkInformation;
@@ -41,36 +42,88 @@ namespace AztecTariff.Services
                     "Duke", "Fountain", "Gate", "Globe", "Grapes", "Harbour", "Hare", "Horn", "Hound", "Inn",
                     "Mill", "Phoenix", "Plough", "Pump", "Railway", "Rat", "Sailor", "Smith", "Tavern", "Wine"
                 };
-        
+
         string[] pubNameEndings = new string[]
             {
-                "Inn", "Tavern", "Bar", "Pub", "Alehouse", "Arms", "Lounge", "Taproom", "Saloon", "Brewery"
+                "Inn", "Tavern", "Alehouse", "Arms", "Lounge", "Taproom", "Saloon", "Brewery"
             };
 
+        string[] salesAreaNames = new string[]
+        {
+            "Pub", "Restaurant", "Garden", "Hotel", "Cafe","Bar"
+        };
 
-        List<Category> Categories = new List<Category>();
+
+        List<Pricing> Pricings = new List<Pricing>();
         List<Product> Products = new List<Product>();
-        List<Site> Sites = new List<Site>();
+        List<SalesArea> Sites = new List<SalesArea>();
 
         public void CreateCSVFiles()
         {
-            CreateSiteListCSV(8);
-            CreateCategoryCSV();
+            CreateSiteListCSV(3);
             CreateDrinkListCSV(70);
+            CreatePricingList();
+        }
+
+        private void CreatePricingList()
+        {
+            Pricings = new List<Pricing>();
+            var r = new Random();
+            int i = 0;
+            foreach(var site in Sites)
+            {
+                foreach (var prod in Products) 
+                {
+                    i++;
+                    var p = new Pricing()
+                    {
+                        Id = i,
+                        SalesAreaId = site.SalesAreaId,
+                        EstateId = site.EstateId,
+                        Price = r.Next(10, 100) / 10m,
+                        ProductId = prod.ProductId
+                    };
+
+                    Pricings.Add(p);
+
+
+                }
+            }
+
+            using (var writer = new StreamWriter("Data/CSVs/Pricings.csv"))
+            using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
+            {
+                csv.WriteRecords(Pricings);
+            }
         }
 
         private void CreateSiteListCSV(int num)
         {
-            Sites = new List<Site>();
+            Sites = new List<SalesArea>();
+
             var r = new Random();
+            int idcount = 1;
             for(int i = 0; i < num; i++)
             {
-                Site site = new Site()
+                var siteName = $"{GenerateName()} {pubNameEndings[r.Next(0, pubNameEndings.Length - 1)]}";
+                var estateid = 34;
+
+                for(int j = 0; j < r.Next(2,5); j++)
                 {
-                    APIId = i,
-                    Name = $"{GenerateName()} {pubNameEndings[r.Next(0, pubNameEndings.Length - 1)]}"
-                };
-                Sites.Add(site);
+                    SalesArea site = new SalesArea()
+                    {
+                        EstateId = estateid,
+                        SiteName = siteName,
+                        SiteId = i+1,
+                        SalesAreaId = idcount,
+                        SAName = salesAreaNames[j],
+                        Deleted = false,
+                        Included = true,
+                        TariffName = $"{salesAreaNames[j]} Prices",
+                    };
+                    Sites.Add(site);
+                    idcount++;
+                }
             }
 
             using (var writer = new StreamWriter("Data/CSVs/Sites.csv"))
@@ -92,51 +145,36 @@ namespace AztecTariff.Services
             return name.Trim();
         }
 
-        private void CreateCategoryCSV()
-        {
-            Categories = new List<Category>();
-            int i = 0;
-            foreach (string heading in headings) 
-            {
-                Categories.Add(new Category()
-                {
-                    Name = heading,
-                    APIId = i
-                });
-                i++;
-            }
-
-            using (var writer = new StreamWriter("Data/CSVs/Categories.csv"))
-            using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
-            {
-                csv.WriteRecords(Categories);
-            }
-        }
-
-
         private void CreateDrinkListCSV(int num)
         {
             var r = new Random();
             Products = new List<Product>();
+            int entityCode = 1000000000;
             for (int i = 0; i < num; i++)
             {
-                var newRec = new Product()
+                var newProd = new Product()
                 {
-                    APIId = i,
+                    EstateId = 34,
+                    Portion = 1,
                     Included = true,
-                    Price = (decimal)r.Next(0, 100) / (decimal)10.00,
+                    EntityCode = entityCode.ToString(),
                 };
+                entityCode++;
 
+                newProd.ProductId = long.Parse($"{newProd.Portion}{newProd.EntityCode}");
                 var drinkName = GenerateName();
 
 
-                int randNum = r.Next(0, headings.Count());
-                newRec.CategoryId = Categories[randNum].APIId;
+                int randNum = r.Next(0, headings.Count()-1);
+                newProd.CategoryId = randNum;
+                var cat = headings[randNum];
+                newProd.CategoryName = ShorthandText(cat);
+                newProd.TariffCategory = cat;
                 switch (randNum)
                 {
                     case 0:
-                        drinkName += " Beer";
-                        newRec.ABV = Math.Round(r.NextDouble() * 10, 2);
+                        drinkName += (r.Next(0, 10) % 2 == 0) ? " Cider" : " Beer";
+                        newProd.ABV = Math.Round(r.NextDouble() * 10, 2);
                         break;
                     case 1:
                         drinkName += (r.Next(0, 10) % 2 == 0) ? " Cola" : " Fizz";
@@ -146,35 +184,58 @@ namespace AztecTariff.Services
                         break;
                     case 3:
                         drinkName += (r.Next(0, 10) % 2 == 0) ? " Amontilado" : "cello";
-                        newRec.ABV = Math.Round(r.NextDouble() * 10, 2);
+                        newProd.ABV = Math.Round(r.NextDouble() * 10, 2);
                         break;
                     case 4:
-                        drinkName += " Beer";
-                        newRec.ABV = Math.Round(r.NextDouble() * 10, 2);
+                        drinkName += (r.Next(0, 10) % 2 == 0) ? " Cider" : " Beer";
+                        newProd.ABV = Math.Round(r.NextDouble() * 10, 2);
                         break;
                     case 5:
                         drinkName += (r.Next(0, 10) % 2 == 0) ? " On The Rocks" : " Fishbowl";
-                        newRec.ABV = Math.Round(r.NextDouble() * 10, 2);
+                        newProd.ABV = Math.Round(r.NextDouble() * 10, 2);
                         break;
                     case 6:
                         drinkName += (r.Next(0, 10) % 2 == 0) ? " Champagne" : " Chardonay";
-                        newRec.ABV = Math.Round(r.NextDouble() * 10, 2);
+                        newProd.ABV = Math.Round(r.NextDouble() * 10, 2);
                         break;
                     case 7:
                         drinkName += (r.Next(0, 10) % 2 == 0) ? " Orange Juice" : " Tonic Water";
                         break;
                     case 8:
                         drinkName += (r.Next(0, 10) % 2 == 0) ? " Vodka" : " Gin";
-                        newRec.ABV = Math.Round(r.NextDouble() * 10, 2);
+                        newProd.ABV = Math.Round(r.NextDouble() * 10, 2);
                         break;
                     case 9:
                         drinkName += (r.Next(0, 10) % 2 == 0) ? " Temple" : " Virgin";
                         break;
                 }
 
-                newRec.ProductName = drinkName.Trim();
-                newRec.Included = true;
-                Products.Add(newRec);
+                if (r.Next(10) > 9)
+                {
+                    var differentPortionProd = new Product()
+                    {
+                        EstateId = 34,
+                        Portion = 2,
+                        Included = true,
+                        EntityCode = entityCode.ToString(),
+                        ProdName = ShorthandText(drinkName.Trim()),
+                        ABV = newProd.ABV,
+                        CategoryId = newProd.CategoryId,
+                        CategoryName = newProd.CategoryName,
+                        ProductTariffName =  drinkName.Trim(),
+                        TariffCategory = newProd.TariffCategory,
+                    };
+                    differentPortionProd.ProductId = int.Parse($"{differentPortionProd.Portion}{differentPortionProd.EntityCode}");
+                    entityCode++;
+
+                    Products.Add(differentPortionProd);
+
+                }
+
+                newProd.ProdName = ShorthandText(drinkName.Trim());
+                newProd.ProductTariffName = drinkName.Trim();
+                newProd.Included = true;
+                Products.Add(newProd);
             }
             using (var writer = new StreamWriter("Data/CSVs/DrinkList.csv"))
             using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
@@ -183,5 +244,9 @@ namespace AztecTariff.Services
             }
         }
 
+        private string ShorthandText(string v)
+        {
+            return v.Replace("a", "").Replace("e", "").Replace("i", "").Replace("o", "").Replace("u", "").Replace(" ", "");
+        }
     }
 }

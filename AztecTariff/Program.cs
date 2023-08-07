@@ -20,7 +20,8 @@ builder.Services.AddTelerikBlazor();
 builder.Services.AddScoped<ProductService>();
 builder.Services.AddScoped<Settings>();
 builder.Services.AddScoped<CategoryService>();
-builder.Services.AddScoped<SiteService>();
+builder.Services.AddScoped<PricingService>();
+builder.Services.AddScoped<SalesAreaService>();
 //builder.Services.AddScoped<NavigationManager>();
 
 

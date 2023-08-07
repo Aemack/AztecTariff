@@ -222,7 +222,9 @@ main {
 
 @import url("https://fonts.googleapis.com/css?family=Montserrat:700");
 
-.hero {
+
+ /*Login background anim*/
+.cubic-background {
     background-color: rgb(139,205,203);
     position: relative;
     height: 100vh;
@@ -230,7 +232,7 @@ main {
     font-family: "Montserrat", sans-serif;
 }
 
-.hero__title {
+.login__title {
     color: #fff;
     position: absolute;
     top: 50%;
@@ -315,7 +317,7 @@ main {
     }
 }
 
-/*-------------*/
+/*----My box shadow---------*/
 
 .mybs {
     box-shadow: rgba(0, 0, 0, 0.25) 0px 54px 55px, rgba(0, 0, 0, 0.12) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px, rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px;
@@ -325,6 +327,8 @@ main {
 
 }
 
+
+/*---------*/
 .heading {
     text-decoration: underline;
     color: rgba(var(--bs-secondary-rgb));
@@ -336,4 +340,24 @@ main {
     font-size: 18px;
     text-decoration: underline;
     text-decoration-color: rgba(var(--bs-primary-rgb));
+}
+
+/*Simpler Table*/
+
+.no-headers-grid > div > div.k-grid-header {
+    display: none;
+}
+
+.grid-no-scroll .k-grid-content {
+    overflow-y: auto;
+}
+
+.grid-no-scroll .k-grid-header,
+.grid-no-scroll .k-grid-footer {
+    padding-right: 0; /* version 2.26 and older requires !important here */
+}
+
+.grid-no-scroll .k-grid-header-wrap,
+.grid-no-scroll .k-grid-footer-wrap {
+    border-right-width: 0;
 }

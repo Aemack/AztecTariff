@@ -7,21 +7,66 @@
 @inject IDbContextFactory<ApplicationDBContext> DbFactory
 
 
-
 @if (isLoading)
 {
     <LoadingOverlayComponent></LoadingOverlayComponent>
 }
 
-@*List of Sites*@
 <div class="container-fluid" style="height:100%">
-    <div class="row p-0" style="height:100vh">
-        <TelerikGrid class="col p-0" Data="@Sites" @ref="SiteGrid"
-                     SelectionMode="GridSelectionMode.Single"
-                     Pageable="false"
-                     OnRowDrop="@((GridRowDropEventArgs<FullSite> args) => SiteMoved(args))"
-                     SelectedItemsChanged="@((IEnumerable<FullSite> site) => OnSiteSelect(site.First()))">
+    <div class="position-absolute bottom-0 end-0">
+        <Toast @ref="Toast"></Toast>
+    </div>
 
+    <div class="row p-0" style="height:100vh">
+
+        @*List of Sites*@
+        <TelerikGrid class="col p-0" Data="@Sites" @ref="SiteGrid"
+                     SelectionMode="GridSelectionMode.None"
+                     Pageable="false"
+                     OnRowDrop="@((GridRowDropEventArgs<FullSite> args) => SiteMoved(args))">
+
+
+            <RowTemplate Context="site">
+                <td class="k-table-td row">
+                    <div class="row p-2">
+                        @if (SelectedSites.Contains(site))
+                        {
+                            <div @onclick="@(() => SiteChevronClicked(site))" class="col" style="cursor:pointer;">
+                                <TelerikFontIcon class="openchevron" Icon="@FontIcon.ChevronUp"></TelerikFontIcon>
+                            </div>
+                        }
+                        else
+                        {
+                            <div @onclick="@(() => SiteChevronClicked(site))" class="col" style="cursor:pointer;">
+                                <TelerikFontIcon class="closedchevron" Icon="@FontIcon.ChevronUp"></TelerikFontIcon>
+                            </div>
+                        }
+
+                        <span class="col-10">@site.SiteName</span>
+                    </div>
+                    @{
+                        subRowCount = 0;
+                    }
+                    @if (SelectedSites.Contains(site))
+                    {
+
+                        //Change into TelerikGrid to use built in edit
+                        //if empty, show empty message
+                        @foreach (var sa in site.SalesAreas)
+                        {
+                            <div class="p-3 @((subRowCount++ % 2 ==0) ? "k-alt k-table-alt-row" : "k-table-row")" style="cursor:pointer" @onclick="@(() => SalesAreaSelected(sa))">
+                                <div class="container-fluid" style="padding:0px 0px 0px 25px; cursor:pointer;">
+                                    <Animate Animation=Animations.SlideDown>
+                                        <div class="row">
+                                            <span class="col-9" style="font-size: 14px;">@sa.SalesAreaName</span>
+                                        </div>
+                                    </Animate>
+                                </div>
+                            </div>
+                        }
+                    }
+                </td>
+            </RowTemplate>
             <GridColumns>
                 <GridColumn Field="Name" Title="Site" />
             </GridColumns>
@@ -30,56 +75,166 @@
 
 
         @*List by cats*@
-        <TelerikGrid class="col p-0" Data="@SelectedSite.Categories" @ref="CatGrid"
+        <TelerikGrid class="col p-0" Data="SelectedSalesArea.Categories" @ref="CatGrid"
                      SelectionMode="GridSelectionMode.None"
                      Pageable="false"
                      RowDraggable="true"
-                     OnRowDrop="@((GridRowDropEventArgs<FullCategory> args) => CategoryMoved(args))">
+                     OnRowDrop="@((GridRowDropEventArgs<FullCategory> args) => CategoryMoved(args))"
+                     EditMode="@GridEditMode.Popup">
             <RowTemplate Context="category">
                 <td class="k-table-td row ">
                     <div class="row p-2">
-                        @if (SelectedCategory == category)
+                        @if (SelectedCategories.Contains(category))
                         {
-                            <div @onclick="@(() => CategoryClicked(category))" class="col" style="cursor:pointer;">
+                            <div class="col" style="cursor:pointer;" @onclick="@(() => CategoryChevronClicked(category))">
                                 <TelerikFontIcon class="openchevron" Icon="@FontIcon.ChevronUp"></TelerikFontIcon>
                             </div>
                         }
                         else
                         {
-                            <div @onclick="@(() => CategoryClicked(category))" class="col" style="cursor:pointer;">
+                            <div class="col" style="cursor:pointer;" @onclick="@(() => CategoryChevronClicked(category))">
                                 <TelerikFontIcon class="closedchevron" Icon="@FontIcon.ChevronUp"></TelerikFontIcon>
                             </div>
                         }
 
-                        <span class="col-10">@category.Name</span>
+                        <span class="col-10">@category.TariffCategory</span>
                         @if (category.Products.Count != 0)
                         {
-                            <input class="col" @bind="@category.AllSelected" type="checkbox" style="height:15px;" @onclick="() => {CategoryCheckboxClicked(category);}" />
+                            <input class="col" @bind="@category.AllSelected" type="checkbox" style="height:15px;" @onclick="@(() => CategoryCheckboxClicked(category))" />
                         }
                         else
                         {
-                            <input class="col" @bind="@category.AllSelected" type="checkbox" style="height:15px;" @onclick="() => {CategoryCheckboxClicked(category);}" disabled />
+                            <input class="col" @bind="@category.AllSelected" type="checkbox" style="height:15px;" disabled />
                         }
                     </div>
                     @{
                         subRowCount = 0;
                     }
-                    @if (SelectedCategory == category)
+                    @if (SelectedCategories.Contains(category))
                     {
                         //if empty, show empty message
-                        @foreach (var p in category.Products)
-                        {
-                            <div class="@((subRowCount++ % 2 ==0) ? "k-alt k-table-alt-row" : "k-table-row")">
-                                <div class="container-fluid" style="padding:0px 0px 0px 25px; cursor:default;">
-                                    <Animate Animation=Animations.SlideDown>
-                                        <div class="row">
-                                            <span class="col-9" style="font-size: 14px;">@p.ProductName</span>
-                                            <input class="col m-auto" @bind="p.Included" type="checkbox" style="height:15px;" @onclick="() => {ProductCheckboxClicked(p);}" />
-                                        </div>
-                                    </Animate>
-                                </div>
+                        //Change to Telerikgrid to use built in Edit
+
+
+                        <TelerikGrid class="col p-0 grid-no-scroll" Data="category.Products" @ref="ProdGrid"
+                                     SelectionMode="GridSelectionMode.None"
+                                     Pageable="false"
+                                     RowDraggable="true"
+                                     EditMode="@GridEditMode.Popup"
+                                     OnRowDrop="@((GridRowDropEventArgs<FullProduct> args) => ProductMoved(args))">
+
+                            <GridSettings>
+                                <GridPopupEditSettings MaxHeight="95vh" MaxWidth="95vw"></GridPopupEditSettings>
+                                <GridPopupEditFormSettings ColumnSpacing="20px" Orientation="@FormOrientation.Horizontal" Columns="2">
+                                    <FormTemplate>
+                                        @{
+                                            EditItem = context.Item as FullProduct;
+
+                                            <TelerikForm Model="@EditItem" OnValidSubmit="@OnValidSubmit">
+                                                <FormItems>
+                                                    <div class="d-flex align-items-center justify-content-center"><i>@EditItem.ProdName</i></div>
+                                                    <FormItem Field="Price" LabelText="Price"></FormItem>
+                                                </FormItems>
+                                                <FormButtons>
+                                                    <TelerikButton Icon="@nameof(FontIcon.Save)" OnClick="SaveProduct">Save</TelerikButton>
+                                                    <TelerikButton Icon="@nameof(FontIcon.Cancel)" OnClick="CancelEditProduct" ButtonType="@ButtonType.Button">Cancel</TelerikButton>
+                                                </FormButtons>
+                                            </TelerikForm>
+                                        }
+                                    </FormTemplate>
+                                </GridPopupEditFormSettings>
+                            </GridSettings>
+                            <GridColumns>
+                                <GridColumn>
+                                    <Template>
+                                        @{
+                                            var b = (FullProduct)context;
+
+                                            <div class="row ">
+
+                                                <div style="cursor:pointer;" @onclick="@(() => EditProduct(b))" class="m-auto p-0 col d-flex justify-content-center align-items-center">
+                                                    <TelerikFontIcon class="m-auto" Icon="@FontIcon.Pencil"></TelerikFontIcon>
+                                                </div>
+                                                <div class="m-auto p-0 col d-flex justify-content-center align-items-ceter">
+                                                    <p class="m-auto">@b.ProductTariffName</p>
+                                                </div>
+                                                <div class="m-auto p-0 col d-flex justify-content-center align-items-ceter">
+                                                    <input class="col m-auto" @bind="b.Included" type="checkbox" style="height:15px;" @onclick="@(() => ProductCheckboxClicked(b))" />
+                                                </div>
+
+                                            </div>
+                                        }
+
+                                    </Template>
+                                </GridColumn>
+                                @*                                <GridCommandColumn>
+                            <GridCommandButton Command="Edit" Icon="@FontIcon.Pencil">Edit</GridCommandButton>
+                            </GridCommandColumn>*@
+                                @*<GridColumn Width="80%">
+                            <Template>
+                            @{
+                            var b = (FullProduct)context;
+
+                            <div class="row ">
+
+                            <div style="cursor:pointer;" @onclick="@(() => EditProduct(b))" class="m-auto p-0 col d-flex justify-content-center">
+                            <TelerikFontIcon class="m-auto" Icon="@FontIcon.Pencil"></TelerikFontIcon>
                             </div>
-                        }
+
+                            <p style="cursor:pointer;" class="col-10 my-auto px-0">@b.ProductTariffName</p>
+
+                            </div>
+                            }
+
+                            </Template>
+                            <EditorTemplate>
+                            @{
+                            var b = (FullProduct)context;
+                            <div class="d-flex flex-column justify-content-center align-items-center">
+                            <div class="d-flex flex-row my-1">
+                            <i class="mx-auto">
+                            <p class="my-auto mx-1">@b.ProdName</p>
+                            </i>
+                            </div>
+                            <TelerikTextBox @bind-Value="@b.ProductTariffName" />
+                            <TelerikNumericTextBox Format="C"  Step="0.5m" @bind-Value="@b.Price"></TelerikNumericTextBox>
+
+                            </div>
+                            }
+                            </EditorTemplate>
+                            <HeaderTemplate>
+
+                            Product
+
+                            </HeaderTemplate>
+                            </GridColumn>*@
+                                @*<GridColumn Field="ProductTariffName" Title="Product" />*@
+                                @*<GridColumn Field="Price">
+                            <Template>
+                            @{
+                            var p = (FullProduct)context;
+                            <p class="m-auto">£@p.Price.ToString("0.00")</p>
+                            }
+                            </Template>
+                            </GridColumn>*@
+                                @*<GridColumn Title="ABV">
+                            <Template>
+                            @{
+                            var p = (FullProduct)context;
+                            <p class="m-auto">@((p.ABV == 0) ? "-" : $"{p.ABV.ToString("0.00")}%")</p>
+                            }
+                            </Template>
+                            </GridColumn>*@
+@*                                <GridColumn Title="Included">
+                                    <Template>
+                                        @{
+                                            var p = (FullProduct)context;
+                                            <input class="col m-auto" @bind="p.Included" type="checkbox" style="height:15px;" @onclick="@(() => ProductCheckboxClicked(p))" />
+                                        }
+                                    </Template>
+                                </GridColumn>*@
+                            </GridColumns>
+                        </TelerikGrid>
                     }
                 </td>
             </RowTemplate>
@@ -118,27 +273,30 @@
     string docname;
     TelerikGrid<FullSite> SiteGrid;
     TelerikGrid<FullCategory> CatGrid;
+    TelerikGrid<FullProduct> ProdGrid;
     byte[] PdfSource;
     List<FullSite> Sites = new List<FullSite>();
-    FullCategory SelectedCategory = new FullCategory();
+    List<FullCategory> SelectedCategories = new List<FullCategory>();
+    List<FullSite> SelectedSites = new List<FullSite>();
     FullSite SelectedSite = new FullSite();
+    FullSalesArea SelectedSalesArea = new FullSalesArea();
     PDFMakerService pDFMaker;
+    PricingService pricingService;
     bool isLoading;
+    public FullProduct EditItem { get; set; }
+    Toast Toast;
 
-    SiteService siteService;
+    SalesAreaService siteService;
 
     protected override async Task OnInitializedAsync()
     {
         isLoading = true;
-        siteService = new SiteService(DbFactory.CreateDbContext());
+        siteService = new SalesAreaService(DbFactory.CreateDbContext());
         await Task.Delay(1);
         pDFMaker = new PDFMakerService();
+        pricingService = new PricingService(DbFactory.CreateDbContext());
         await LoadSites();
-        UpdateAllSelected();
-        isLoading = false;
-        await Task.Delay(1);
     }
-
 
     private async Task LoadSites()
     {
@@ -147,70 +305,9 @@
         isLoading = false;
     }
 
-    private async Task ProductCheckboxClicked(Product product)
-    {
-        isLoading = true;
-        product.Included = !product.Included;
-        UpdateAllSelected();
-        await UpdatePDF();
-        isLoading = false;
-
-    }
-
-    private void CategoryClicked(FullCategory category)
-    {
-        if (SelectedCategory == category)
-        {
-            SelectedCategory = new FullCategory();
-        }
-        else
-        {
-            SelectedCategory = category;
-        }
-    }
-
-    private async void CategoryCheckboxClicked(FullCategory category)
-    {
-        category.AllSelected = !category.AllSelected;
-        foreach (var p in category.Products)
-        {
-            p.Included = category.AllSelected;
-        }
-        //UpdateAllSelected();
-
-        await UpdatePDF();
-    }
-
-    private void UpdateAllSelected()
-    {
-        foreach (var cat in SelectedSite.Categories)
-        {
-            if (cat.IncludedProducts.Count == cat.Products.Count)
-            {
-                cat.AllSelected = true;
-            }
-            else
-            {
-                cat.AllSelected = false;
-            }
-        }
-    }
-
-
-    private async Task OnSiteSelect(FullSite site)
-    {
-        isLoading = true;
-        PDFMakerService pDFMaker = new PDFMakerService();
-        SiteGrid.SelectedItems = new List<FullSite>();
-        SelectedSite = site;
-        UpdateAllSelected();
-        await UpdatePDF();
-        isLoading = false;
-    }
-
     public async Task UpdatePDF()
     {
-        docname = await pDFMaker.MakePdf(SelectedSite);
+        docname = await pDFMaker.MakePdf(SelectedSalesArea);
         if (string.IsNullOrWhiteSpace(docname)) return;
         Byte[] fileBytes = File.ReadAllBytes(@$"Data\{docname}");
         var content = Convert.ToBase64String(fileBytes);
@@ -219,6 +316,7 @@
             Console.WriteLine("Same thing");
         }
         PdfSource = Convert.FromBase64String(content);
+        await Task.Delay(1);
     }
 
     public void SiteMoved(GridRowDropEventArgs<FullSite> args)
@@ -244,17 +342,160 @@
         if (args.Item != null)
         {
             var newIndex = (args.DropPosition == GridRowDropPosition.Before) ? int.Parse(args.DestinationIndex) - 1 : int.Parse(args.DestinationIndex);
-            var oldIndex = SelectedSite.Categories.IndexOf(args.Item);
+            var oldIndex = SelectedSalesArea.Categories.IndexOf(args.Item);
             if (oldIndex > -1)
             {
-                SelectedSite.Categories.RemoveAt(oldIndex);
+                SelectedSalesArea.Categories.RemoveAt(oldIndex);
 
                 if (newIndex > oldIndex) newIndex--;
                 // the actual index could have shifted due to the removal
 
-                SelectedSite.Categories.Insert(newIndex, args.Item);
+                SelectedSalesArea.Categories.Insert(newIndex, args.Item);
                 await UpdatePDF();
             }
         }
+    }
+
+    public async Task ProductMoved(GridRowDropEventArgs<FullProduct> args)
+    {
+        throw new NotImplementedException();
+    }
+
+    public void SiteChevronClicked(FullSite site)
+    {
+        if (SelectedSites.Contains(site))
+        {
+            SelectedSites.Remove(site);
+        }
+        else
+        {
+            SelectedSites.Add(site);
+        }
+    }
+
+    public async Task SalesAreaSelected(FullSalesArea salesArea)
+    {
+        isLoading = true;
+        SelectedSalesArea = salesArea;
+        UpdateAllSelected();
+        await UpdatePDF();
+        isLoading = false;
+    }
+
+    public void CategoryChevronClicked(FullCategory category)
+    {
+        if (SelectedCategories.Contains(category))
+        {
+            SelectedCategories.Remove(category);
+        }
+        else
+        {
+            SelectedCategories.Add(category);
+        }
+    }
+
+    private void UpdateAllSelected()
+    {
+        foreach (var cat in SelectedSalesArea.Categories)
+        {
+            if (cat.IncludedProducts.Count == cat.Products.Count)
+            {
+                cat.AllSelected = true;
+            }
+            else
+            {
+                cat.AllSelected = false;
+            }
+        }
+    }
+
+    private async Task ProductCheckboxClicked(FullProduct product)
+    {
+        isLoading = true;
+        product.Included = !product.Included;
+        UpdateAllSelected();
+        await UpdatePDF();
+        isLoading = false;
+    }
+
+    private async Task CategoryCheckboxClicked(FullCategory category)
+    {
+        isLoading = true;
+        category.AllSelected = !category.AllSelected;
+        foreach (var p in category.Products)
+        {
+            p.Included = category.AllSelected;
+        }
+        UpdateAllSelected();
+        await UpdatePDF();
+        isLoading = false;
+    }
+
+    public async Task SaveClicked()
+    {
+        throw new NotImplementedException();
+    }
+
+    public async Task EditProduct(FullProduct product)
+    {
+        var currState = ProdGrid.GetState();
+        currState.EditItem = null;
+        currState.OriginalEditItem = null;
+
+        FullProduct itemToEdit = FullProduct.GetClonedInstance(product);
+
+        currState.EditItem = itemToEdit;
+        currState.OriginalEditItem = product;
+
+        await ProdGrid.SetStateAsync(currState);
+
+    }
+
+    public void OnValidSubmit()
+    {
+        Console.WriteLine();
+    }
+
+    public async Task SaveProduct()
+    {
+        isLoading = true;
+
+        await ExitEditAsync();
+        var foundItem = await pricingService.GetProductPricing(EditItem.ProductId, SelectedSalesArea.SalesAreaId);
+        try
+        {
+            var gridItem = SelectedSalesArea.Categories.Select(x => x.Products.Where(p => p.ProductId == foundItem.ProductId).First()).First();
+            foundItem.Price = EditItem.Price;
+            gridItem.Price = EditItem.Price;
+            await pricingService.UpdatePricing(foundItem);
+            await Task.Delay(1);
+            await Task.Delay(1);
+            await InvokeAsync(() => StateHasChanged());
+
+            await Toast.DisplayMessage("Succesfully Updated Sales Area Price", "bg-green");
+
+        }
+        catch
+        {
+            await Toast.DisplayMessage("Failed To Update Sales Area Price", "bg-red");
+        }
+
+        await UpdatePDF();
+        isLoading = false;
+    }
+
+    private async Task ExitEditAsync()
+    {
+        var state = ProdGrid?.GetState();
+        state.OriginalEditItem = null;
+        state.EditItem = null;
+        state.InsertedItem = null;
+
+        await ProdGrid?.SetStateAsync(state);
+    }
+
+    public async Task CancelEditProduct()
+    {
+        await ExitEditAsync();
     }
 }

@@ -12,9 +12,8 @@ namespace AztecTariff.Data
             => options.UseSqlite("DataSource = AztecTariff.db;");
 
         public DbSet<Product> Products { get; set; }
-        public DbSet<Category> Categories { get; set; }
-        public DbSet<Site> Sites { get; set; }
-        public DbSet<SiteProductMapping> SiteProductMapping { get; set; }
+        public DbSet<Pricing> Pricing { get; set; }
+        public DbSet<SalesArea> SalesAreas { get; set; }
 
     }
 }

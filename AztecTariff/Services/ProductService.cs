@@ -9,10 +9,11 @@ namespace AztecTariff.Services
     public class ProductService
     {
         private readonly ApplicationDBContext _dbContext;
-
+        private PricingService _pricingService;
         public ProductService(ApplicationDBContext dbContext)
         {
             _dbContext = dbContext;
+            _pricingService = new PricingService(dbContext);
         }
 
 
@@ -36,31 +37,7 @@ namespace AztecTariff.Services
             await _dbContext.SaveChangesAsync();
         }
 
-        public async Task PopulateProductsMappingTable()
-        {
-            _dbContext.SiteProductMapping.RemoveRange(_dbContext.SiteProductMapping);
-            await _dbContext.SaveChangesAsync();
 
-            var productMappings = new List<SiteProductMapping>();
-            var products = await GetAllProducts();
-
-            foreach (var site in _dbContext.Sites)
-            {
-                foreach(var prod in products)
-                {
-                    var newSiteMap = new SiteProductMapping()
-                    {
-                        SiteId = site.APIId,
-                        ProductId = prod.APIId,
-
-                    };
-                    _dbContext.SiteProductMapping.Add(newSiteMap);
-                }
-                
-            }
-
-            await _dbContext.SaveChangesAsync();
-        }
 
         public async Task<List<Product>> GetAllProducts()
         {
@@ -74,7 +51,7 @@ namespace AztecTariff.Services
 
         public async Task<Product> GetProductById(int id)
         {
-            return await _dbContext.Products.Where(p => p.APIId == id).FirstOrDefaultAsync();
+            return await _dbContext.Products.Where(p => p.ProductId == id).FirstOrDefaultAsync();
         }
 
         public List<Product> GetProductsByCategory(int categoryId) 
@@ -87,17 +64,6 @@ namespace AztecTariff.Services
             return _dbContext.Products.Where(p => p.CategoryId == categoryId && p.Included).ToList();
         }
 
-        public async Task<List<Product>> GetProductsBySite(int siteId)
-        {
-            var products = new List<Product>();
-            var mapping = await _dbContext.SiteProductMapping.Where(sm => sm.SiteId == siteId).ToListAsync();
-            foreach(var m in mapping)
-            {
-                products.Add(_dbContext.Products.Where(p => p.APIId == m.ProductId).FirstOrDefault());
-            }
-
-            return products;
-        }
 
         public async Task AddProduct(Product product)
         {
@@ -107,16 +73,85 @@ namespace AztecTariff.Services
 
         public async Task UpdateProduct(Product product)
         {
-            var prodToUpdate = _dbContext.Products.Where(p => p.APIId == product.APIId).FirstOrDefault();
-            prodToUpdate.ProductName = product.ProductName;
+            var prodToUpdate = _dbContext.Products.Where(p => p.ProductId == product.ProductId).First();
+            prodToUpdate.ProductTariffName = product.ProductTariffName;
             prodToUpdate.Included = product.Included;
             await _dbContext.SaveChangesAsync();
         }
 
+        public async Task UpdateProduct(FullProduct product)
+        {
+            var prodToUpdate = _dbContext.Products.Where(p => p.ProductId == product.ProductId).First();
+            prodToUpdate.ProductTariffName = product.ProductTariffName;
+            prodToUpdate.Included = product.Included;
+            await _dbContext.SaveChangesAsync();
+        }
+
+        public async Task UpdateProducts(List<FullProduct> products)
+        {
+            foreach(var p in products)
+            {
+                await UpdateProduct(p);
+            }
+        }
+
         public async Task DeleteProduct(int id)
         {
-            _dbContext.Products.Remove(_dbContext.Products.Where(p => p.APIId == id).First());
+            _dbContext.Products.Remove(_dbContext.Products.Where(p => p.ProductId == id).First()); ;
             await _dbContext.SaveChangesAsync();
+        }
+
+
+
+        public async Task AddProducts(List<Product> products)
+        {
+            foreach(var p in products)
+            {
+                await AddProduct(p);
+            }
+        }
+
+        public async Task<List<FullProduct>> GetFullProductsByCategory(int category, int salesAreaId)
+        {
+            var fullProds = new List<FullProduct>();
+            var prods = await _dbContext.Products.Where(p => p.CategoryId == category).ToListAsync();
+            foreach(var prod in prods)
+            {
+                var fp = new FullProduct()
+                {
+                    ABV = prod.ABV,
+                    Included = prod.Included,
+                    Portion = prod.Portion,
+                    Price = await _pricingService.GetProductPrice(prod.ProductId, salesAreaId),
+                    ProdName = prod.ProdName,
+                    ProductId = prod.ProductId,
+                    ProductTariffName = prod.ProductTariffName,
+                };
+
+                fullProds.Add(fp);
+            }
+
+            return fullProds;
+        }
+
+        public async Task<List<FullProduct>> GetFullProducts(int category)
+        {
+            var prods = await _dbContext.Products.Where(p => p.CategoryId == category).ToListAsync();
+            var fullprods = new List<FullProduct>();
+            foreach (var prod in prods)
+            {
+                var fp = new FullProduct()
+                {
+                    ABV = prod.ABV,
+                    Included = prod.Included,
+                    Portion = prod.Portion,
+                    ProdName = prod.ProdName,
+                    ProductId = prod.ProductId,
+                    ProductTariffName = prod.ProductTariffName,
+                };
+                fullprods.Add(fp);
+            }
+            return fullprods;
         }
     }
 }

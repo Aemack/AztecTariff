@@ -1,9 +1,12 @@
-Id,APIId,Name
-0,0,Bull Taproom
-0,1,Bear Alehouse
-0,2,Mason's Pub
-0,3,Jolly Pub
-0,4,Black Inn
-0,5,Park Alehouse
-0,6,Three Tuns Taproom
-0,7,Ram Taproom
+SalesAreaId,EstateId,SiteId,SiteName,SAName,Deleted,Included,TariffName
+1,34,1,White Inn,Pub,False,True,Pub Prices
+2,34,1,White Inn,Restaurant,False,True,Restaurant Prices
+3,34,1,White Inn,Garden,False,True,Garden Prices
+4,34,1,White Inn,Hotel,False,True,Hotel Prices
+5,34,2,Otter Inn,Pub,False,True,Pub Prices
+6,34,2,Otter Inn,Restaurant,False,True,Restaurant Prices
+7,34,2,Otter Inn,Garden,False,True,Garden Prices
+8,34,2,Otter Inn,Hotel,False,True,Hotel Prices
+9,34,3,Mitre Alehouse,Pub,False,True,Pub Prices
+10,34,3,Mitre Alehouse,Restaurant,False,True,Restaurant Prices
+11,34,3,Mitre Alehouse,Garden,False,True,Garden Prices

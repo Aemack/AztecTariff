@@ -16,7 +16,7 @@ namespace AztecTariff.Services
         RadFlowDocument document;
         RadFlowDocumentEditor editor;
         List<Product> products;
-        public async Task<string> MakePdf(FullSite pdfDocMod)
+        public async Task<string> MakePdf(FullSalesArea pdfDocMod)
         {
             
             HtmlFormatProvider htmlProvider = new Telerik.Windows.Documents.Flow.FormatProviders.Html.HtmlFormatProvider();
@@ -24,7 +24,7 @@ namespace AztecTariff.Services
             editor = new RadFlowDocumentEditor(document);
             editor.CharacterFormatting.FontSize.LocalValue = 24;
             editor.ParagraphFormatting.TextAlignment.LocalValue = Telerik.Windows.Documents.Flow.Model.Styles.Alignment.Center;
-            editor.InsertText($"{pdfDocMod.Name}");
+            editor.InsertText($"{pdfDocMod.TariffName}");
 
             Break br = editor.InsertBreak(BreakType.LineBreak);
             br.TextWrappingRestartLocation = TextWrappingRestartLocation.NextFullLine;
@@ -75,7 +75,7 @@ namespace AztecTariff.Services
                         cell.Padding = new Telerik.Windows.Documents.Primitives.Padding(2);
                         cell.ColumnSpan = 2;
                         editor.CharacterFormatting.FontSize.LocalValue = 24;
-                        var run = cell.Blocks.AddParagraph().Inlines.AddRun($"{pages[i][j][k].Name}");
+                        var run = cell.Blocks.AddParagraph().Inlines.AddRun($"{pages[i][j][k].TariffCategory}");
 
                         run.FontWeight = FontWeights.Bold;
                         run.Underline.Pattern = UnderlinePattern.Single;
@@ -100,7 +100,7 @@ namespace AztecTariff.Services
                             cell = new TableCell(document);
                             cell.PreferredWidth = new TableWidthUnit(300);
                             cell.Padding = new Telerik.Windows.Documents.Primitives.Padding(2);
-                            var r = cell.Blocks.AddParagraph().Inlines.AddRun($"{p.ProductName}");
+                            var r = cell.Blocks.AddParagraph().Inlines.AddRun($"{p.ProductTariffName}");
                             row.Cells.Add(cell);
 
                             cell = new TableCell(document);
@@ -138,7 +138,7 @@ namespace AztecTariff.Services
                 cell.Padding = new Telerik.Windows.Documents.Primitives.Padding(2);
                 cell.ColumnSpan = 2;
                 editor.CharacterFormatting.FontSize.LocalValue = 24;
-                var run = cell.Blocks.AddParagraph().Inlines.AddRun($"{pc.Name}");
+                var run = cell.Blocks.AddParagraph().Inlines.AddRun($"{pc.TariffCategory}");
 
                 run.FontWeight = FontWeights.Bold;
                 run.Underline.Pattern = UnderlinePattern.Single;
@@ -151,7 +151,7 @@ namespace AztecTariff.Services
                     cell = new TableCell(document);
                     cell.PreferredWidth = new TableWidthUnit(300);
                     cell.Padding = new Telerik.Windows.Documents.Primitives.Padding(2);
-                    var r = cell.Blocks.AddParagraph().Inlines.AddRun($"{p.ProductName}");
+                    var r = cell.Blocks.AddParagraph().Inlines.AddRun($"{p.ProductTariffName}");
                     row.Cells.Add(cell);
 
                     cell = new TableCell(document);
@@ -162,8 +162,6 @@ namespace AztecTariff.Services
                     t.Rows.Add(row);
                 }
             }
-
-
         }
 
         private string GenerateFileName()
@@ -198,6 +196,7 @@ namespace AztecTariff.Services
                     currentList = new List<FullCategory>();
                     currentSize = 0;
                 }
+
                 currentList.Add(myClass);
                 currentSize += myClass.LinesRequired;
             }

@@ -10,6 +10,7 @@ namespace AztecTariff.Services
     {
         private readonly ApplicationDBContext _dbContext;
         private readonly ProductService _productService;
+        private readonly PricingService _pricingService;
 
         public CategoryService(ApplicationDBContext dbContext)
         {
@@ -17,130 +18,53 @@ namespace AztecTariff.Services
             _productService = new ProductService(dbContext);
         }
 
-        public async Task PopulateCategoriesTable()
+        public async Task<List<FullCategory>> GetSalesAreaCategories(int salesAreaId)
         {
-            _dbContext.Categories.RemoveRange(_dbContext.Categories);
-            await _dbContext.SaveChangesAsync();
-
-            var categories = new List<Category>();
-            using (var reader = new StreamReader("Data/CSVs/Categories.csv"))
-            using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+            var categories = _dbContext.Products.Select(p => p.CategoryId).ToList().Distinct();
+            var fullcats = new List<FullCategory>();
+            foreach (var category in categories)
             {
-                categories = csv.GetRecords<Category>().ToList();
+                var cat = await _dbContext.Products.Where(p => p.CategoryId == category).FirstAsync();
+                var fc = new FullCategory();
+                fc.Products = await _productService.GetFullProductsByCategory(category, salesAreaId);
+                fc.TariffCategory = cat.TariffCategory;
+                fc.CategoryName  = cat.CategoryName;
+                fc.Id = category;
+                fullcats.Add(fc);
             }
-            await AddCategories(categories);
-        }
-
-        public async Task AddCategory(Category category)
-        {
-            _dbContext.Categories.Add(category);
-            await _dbContext.SaveChangesAsync();
-        }
-        public async Task AddCategories(List<Category> categories)
-        {
-            foreach(var cat in categories)
-            {
-                _dbContext.Categories.Add(cat);
-            }
-            await _dbContext.SaveChangesAsync();
+            return fullcats;
         }
 
         public async Task<List<FullCategory>> GetAllFullCategories()
         {
-            var cats = await _dbContext.Categories.ToListAsync();
-            var fullCats = new List<FullCategory>();
-            foreach(var cat in cats)
+            var categories = _dbContext.Products.Select(p => p.CategoryId).ToList().Distinct();
+            var fullcats = new List<FullCategory>();
+            foreach (var category in categories)
             {
-                fullCats.Add(ToFullCategory(cat));
+                var cat = await _dbContext.Products.Where(p => p.CategoryId == category).FirstAsync();
+                var fc = new FullCategory();
+                fc.Products = await _productService.GetFullProducts(category);
+                fc.TariffCategory = cat.TariffCategory;
+                fc.CategoryName = cat.CategoryName;
+                fc.Id = category;
+                fullcats.Add(fc);
             }
-            return fullCats;
+            return fullcats;
         }
 
-        public async Task<List<Category>> GetAllCategories()
+        public async Task UpdateCategories(List<FullCategory> fullcats)
         {
-            return await _dbContext.Categories.ToListAsync();
-        }
-
-        public async Task<FullCategory> GetFullCategory(int CategoryId)
-        {
-            return ToFullCategory(await GetCategory(CategoryId));
-        }
-
-        public async Task<Category> GetCategory(int CategoryId)
-        {
-            return await _dbContext.Categories.Where(c => c.APIId == CategoryId).FirstOrDefaultAsync();
-        }
-
-        public async Task DeleteCategory(int CategoryId)
-        {
-            _dbContext.Categories.Remove(_dbContext.Categories.Where(c => c.APIId == CategoryId).First());
-            await _dbContext.SaveChangesAsync();
-        }
-
-        public async Task UpdateCategory(Category category)
-        {
-            var catToUpdate = _dbContext.Categories.Where(c => c.APIId == category.APIId).First();
-            catToUpdate.Name = category.Name;
-            await _dbContext.SaveChangesAsync();
-        }
-
-        public async Task UpdateCategory(FullCategory category)
-        {
-            var catToUpdate = _dbContext.Categories.Where(c => c.APIId == category.APIId).First();
-            catToUpdate.Name = category.Name;
-            await _dbContext.SaveChangesAsync();
-        }
-
-        public async Task UpdateCategories(List<FullCategory> cats)
-        {
-            foreach(var category in cats)
+            var prods = await _productService.GetAllProducts();
+            foreach (var fullcat in fullcats)
             {
-                await UpdateCategory(category); 
-            }
-            Thread.Sleep(1000);
-        }
-
-        public async Task UpdateCategories(List<Category> cats)
-        {
-            foreach (var category in cats)
-            {
-                await UpdateCategory(category);
-            }
-        }
-
-        public async Task<List<FullCategory>> GetFullCategoriesBySite(int siteId)
-        {
-            var allcats = await GetAllCategories();
-            var products = await _productService.GetProductsBySite(siteId);
-            var fullCats = new List<FullCategory>();
-            
-            foreach(var cat in allcats)
-            {
-                var fullcat = new FullCategory()
+                var matchingProds = prods.Where(p => p.CategoryId == fullcat.Id).ToList();
+                foreach(var p in matchingProds)
                 {
-                    Name = cat.Name,
-                    APIId = cat.APIId,
-                    Products = products.Where(p => p.CategoryId == cat.APIId && p.Included).ToList(),
-                };
-
-                fullCats.Add(fullcat);
+                    p.TariffCategory = fullcat.TariffCategory;
+                    await _productService.UpdateProduct(p);
+                }
             }
-
-            return fullCats;
+            await _dbContext.SaveChangesAsync();
         }
-
-        private FullCategory ToFullCategory(Category cat)
-        {
-            var fullCat = new FullCategory();
-            fullCat.Name = cat.Name;
-            fullCat.Products = _productService.GetProductsByCategory(cat.APIId);
-            fullCat.APIId = cat.APIId;
-            return fullCat;
-        }
-
-        public void Dispose()
-        {
-            throw new NotImplementedException();
-        }
-    }
+    }   
 }

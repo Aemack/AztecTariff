@@ -2,6 +2,7 @@
 using AztecTariff.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -9,9 +10,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AztecTariff.Migrations
 {
     [DbContext(typeof(ApplicationDBContext))]
-    partial class ApplicationDBContextModelSnapshot : ModelSnapshot
+    [Migration("20230712095936_fixingfields")]
+    partial class fixingfields
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "7.0.5");
@@ -28,8 +31,9 @@ namespace AztecTariff.Migrations
                     b.Property<decimal>("Price")
                         .HasColumnType("TEXT");
 
-                    b.Property<long>("ProductId")
-                        .HasColumnType("INTEGER");
+                    b.Property<string>("ProductId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("SalesAreaId")
                         .HasColumnType("INTEGER");
@@ -41,9 +45,8 @@ namespace AztecTariff.Migrations
 
             modelBuilder.Entity("AztecTariff.Models.Product", b =>
                 {
-                    b.Property<long>("ProductId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                    b.Property<string>("ProductId")
+                        .HasColumnType("TEXT");
 
                     b.Property<double>("ABV")
                         .HasColumnType("REAL");
