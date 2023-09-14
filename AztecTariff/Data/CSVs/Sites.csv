@@ -1,12 +1,11 @@
 SalesAreaId,EstateId,SiteId,SiteName,SAName,Deleted,Included,TariffName
-1,34,1,White Inn,Pub,False,True,Pub Prices
-2,34,1,White Inn,Restaurant,False,True,Restaurant Prices
-3,34,1,White Inn,Garden,False,True,Garden Prices
-4,34,1,White Inn,Hotel,False,True,Hotel Prices
-5,34,2,Otter Inn,Pub,False,True,Pub Prices
-6,34,2,Otter Inn,Restaurant,False,True,Restaurant Prices
-7,34,2,Otter Inn,Garden,False,True,Garden Prices
-8,34,2,Otter Inn,Hotel,False,True,Hotel Prices
-9,34,3,Mitre Alehouse,Pub,False,True,Pub Prices
-10,34,3,Mitre Alehouse,Restaurant,False,True,Restaurant Prices
-11,34,3,Mitre Alehouse,Garden,False,True,Garden Prices
+1,34,1,Mermaid Tavern,Pub,False,True,Pub Prices
+2,34,1,Mermaid Tavern,Restaurant,False,True,Restaurant Prices
+3,34,2,Crown Alehouse,Pub,False,True,Pub Prices
+4,34,2,Crown Alehouse,Restaurant,False,True,Restaurant Prices
+5,34,2,Crown Alehouse,Garden,False,True,Garden Prices
+6,34,2,Crown Alehouse,Hotel,False,True,Hotel Prices
+7,34,3,Railway Lounge,Pub,False,True,Pub Prices
+8,34,3,Railway Lounge,Restaurant,False,True,Restaurant Prices
+9,34,3,Railway Lounge,Garden,False,True,Garden Prices
+10,34,3,Railway Lounge,Hotel,False,True,Hotel Prices

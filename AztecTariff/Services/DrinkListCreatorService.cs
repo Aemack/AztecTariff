@@ -61,7 +61,8 @@ namespace AztecTariff.Services
         public void CreateCSVFiles()
         {
             CreateSiteListCSV(3);
-            CreateDrinkListCSV(70);
+            var r = new Random();
+            CreateDrinkListCSV(r.Next(50,100));
             CreatePricingList();
         }
 

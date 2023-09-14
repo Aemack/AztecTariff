@@ -116,7 +116,7 @@
                         //Change to Telerikgrid to use built in Edit
 
 
-                        <TelerikGrid class="col p-0 grid-no-scroll" Data="category.Products" @ref="ProdGrid"
+                        <TelerikGrid class="col p-0 grid-no-scroll" Data="category.IncludedProducts" @ref="ProdGrid"
                                      SelectionMode="GridSelectionMode.None"
                                      Pageable="false"
                                      RowDraggable="true"
@@ -159,6 +159,9 @@
                                                     <p class="m-auto">@b.ProductTariffName</p>
                                                 </div>
                                                 <div class="m-auto p-0 col d-flex justify-content-center align-items-ceter">
+                                                    <p class="m-auto">£@b.Price.ToString("0.00")</p>
+                                                </div>
+                                                <div class="m-auto p-0 col d-flex justify-content-center align-items-ceter">
                                                     <input class="col m-auto" @bind="b.Included" type="checkbox" style="height:15px;" @onclick="@(() => ProductCheckboxClicked(b))" />
                                                 </div>
 
@@ -167,72 +170,6 @@
 
                                     </Template>
                                 </GridColumn>
-                                @*                                <GridCommandColumn>
-                            <GridCommandButton Command="Edit" Icon="@FontIcon.Pencil">Edit</GridCommandButton>
-                            </GridCommandColumn>*@
-                                @*<GridColumn Width="80%">
-                            <Template>
-                            @{
-                            var b = (FullProduct)context;
-
-                            <div class="row ">
-
-                            <div style="cursor:pointer;" @onclick="@(() => EditProduct(b))" class="m-auto p-0 col d-flex justify-content-center">
-                            <TelerikFontIcon class="m-auto" Icon="@FontIcon.Pencil"></TelerikFontIcon>
-                            </div>
-
-                            <p style="cursor:pointer;" class="col-10 my-auto px-0">@b.ProductTariffName</p>
-
-                            </div>
-                            }
-
-                            </Template>
-                            <EditorTemplate>
-                            @{
-                            var b = (FullProduct)context;
-                            <div class="d-flex flex-column justify-content-center align-items-center">
-                            <div class="d-flex flex-row my-1">
-                            <i class="mx-auto">
-                            <p class="my-auto mx-1">@b.ProdName</p>
-                            </i>
-                            </div>
-                            <TelerikTextBox @bind-Value="@b.ProductTariffName" />
-                            <TelerikNumericTextBox Format="C"  Step="0.5m" @bind-Value="@b.Price"></TelerikNumericTextBox>
-
-                            </div>
-                            }
-                            </EditorTemplate>
-                            <HeaderTemplate>
-
-                            Product
-
-                            </HeaderTemplate>
-                            </GridColumn>*@
-                                @*<GridColumn Field="ProductTariffName" Title="Product" />*@
-                                @*<GridColumn Field="Price">
-                            <Template>
-                            @{
-                            var p = (FullProduct)context;
-                            <p class="m-auto">£@p.Price.ToString("0.00")</p>
-                            }
-                            </Template>
-                            </GridColumn>*@
-                                @*<GridColumn Title="ABV">
-                            <Template>
-                            @{
-                            var p = (FullProduct)context;
-                            <p class="m-auto">@((p.ABV == 0) ? "-" : $"{p.ABV.ToString("0.00")}%")</p>
-                            }
-                            </Template>
-                            </GridColumn>*@
-@*                                <GridColumn Title="Included">
-                                    <Template>
-                                        @{
-                                            var p = (FullProduct)context;
-                                            <input class="col m-auto" @bind="p.Included" type="checkbox" style="height:15px;" @onclick="@(() => ProductCheckboxClicked(p))" />
-                                        }
-                                    </Template>
-                                </GridColumn>*@
                             </GridColumns>
                         </TelerikGrid>
                     }
@@ -246,7 +183,7 @@
 
         @*PDF Viewer*@
         <TelerikPdfViewer class="col p-0 pdfviewer"
-                          Zoom=0.75m
+                          Zoom=1m
                           Data="@PdfSource">
             <PdfViewerToolBar>
 
@@ -261,6 +198,12 @@
                 <PdfViewerToolBarZoomTool />
                 <PdfViewerToolBarSelectionTool />
                 <PdfViewerToolBarSearchTool />
+                <PdfViewerToolBarCustomTool>
+                    <label>Template Options</label>
+                    @*<TelerikCheckBox  @bind-Value="@onepage"></TelerikCheckBox>*@
+                    <TelerikDropDownList OnChange="@TemplateChanged" Data="@templateChoices"  @bind-Value="selectedTemplate">
+                    </TelerikDropDownList>
+                </PdfViewerToolBarCustomTool>
             </PdfViewerToolBar>
         </TelerikPdfViewer>
     </div>
@@ -285,31 +228,35 @@
     bool isLoading;
     public FullProduct EditItem { get; set; }
     Toast Toast;
-
+    CategoryService categoryService;
     SalesAreaService siteService;
+    bool onepage;
+    List<string> templateChoices = new List<string>(){"Single-Page","Multi-Page" };
+    string selectedTemplate;
 
     protected override async Task OnInitializedAsync()
     {
         isLoading = true;
+        selectedTemplate = templateChoices[0];
         siteService = new SalesAreaService(DbFactory.CreateDbContext());
         await Task.Delay(1);
         pDFMaker = new PDFMakerService();
         pricingService = new PricingService(DbFactory.CreateDbContext());
         await LoadSites();
+        isLoading = false;
     }
 
     private async Task LoadSites()
     {
-        isLoading = true;
-        Sites = await siteService.GetAllFullSites();
-        isLoading = false;
+        Sites = await siteService.GetAllFullSites();    
     }
 
     public async Task UpdatePDF()
     {
-        docname = await pDFMaker.MakePdf(SelectedSalesArea);
+        if (SelectedSalesArea.Categories.Sum(x => x.LinesRequired) < 5) return;
+        docname = await pDFMaker.MakePdf(SelectedSalesArea, selectedTemplate);
         if (string.IsNullOrWhiteSpace(docname)) return;
-        Byte[] fileBytes = File.ReadAllBytes(@$"Data\{docname}");
+        Byte[] fileBytes = File.ReadAllBytes(@$"{docname}");
         var content = Convert.ToBase64String(fileBytes);
         if (PdfSource == Convert.FromBase64String(content))
         {
@@ -339,6 +286,7 @@
 
     public async Task CategoryMoved(GridRowDropEventArgs<FullCategory> args)
     {
+        isLoading = true;
         if (args.Item != null)
         {
             var newIndex = (args.DropPosition == GridRowDropPosition.Before) ? int.Parse(args.DestinationIndex) - 1 : int.Parse(args.DestinationIndex);
@@ -354,6 +302,7 @@
                 await UpdatePDF();
             }
         }
+        isLoading = false;
     }
 
     public async Task ProductMoved(GridRowDropEventArgs<FullProduct> args)
@@ -363,6 +312,7 @@
 
     public void SiteChevronClicked(FullSite site)
     {
+        isLoading = true;
         if (SelectedSites.Contains(site))
         {
             SelectedSites.Remove(site);
@@ -371,15 +321,18 @@
         {
             SelectedSites.Add(site);
         }
+        isLoading = false;
     }
 
     public async Task SalesAreaSelected(FullSalesArea salesArea)
     {
         isLoading = true;
+        await Task.Delay(1);
         SelectedSalesArea = salesArea;
         UpdateAllSelected();
         await UpdatePDF();
         isLoading = false;
+        await Task.Delay(1);
     }
 
     public void CategoryChevronClicked(FullCategory category)
@@ -461,6 +414,7 @@
         isLoading = true;
 
         await ExitEditAsync();
+
         var foundItem = await pricingService.GetProductPricing(EditItem.ProductId, SelectedSalesArea.SalesAreaId);
         try
         {
@@ -475,7 +429,7 @@
             await Toast.DisplayMessage("Succesfully Updated Sales Area Price", "bg-green");
 
         }
-        catch
+        catch (Exception ex)
         {
             await Toast.DisplayMessage("Failed To Update Sales Area Price", "bg-red");
         }
@@ -497,5 +451,21 @@
     public async Task CancelEditProduct()
     {
         await ExitEditAsync();
+    }
+
+    public void OnePageClicked()
+    {
+        onepage = !onepage;
+    }
+
+    public async Task TemplateChanged()
+    {
+        isLoading = true;
+        await Task.Delay(1);
+        Console.WriteLine(selectedTemplate);
+        await UpdatePDF();
+        isLoading = false;
+        await Task.Delay(1);
+
     }
 }
