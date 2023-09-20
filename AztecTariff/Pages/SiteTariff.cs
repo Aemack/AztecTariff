@@ -40,7 +40,7 @@ namespace AztecTariff.Pages
         string docname;
         int rowCount;
         int subRowCount;
-        bool onepage;
+        bool includeAbv;
         bool isLoading;
         #endregion
         protected override async Task OnInitializedAsync()
@@ -313,7 +313,7 @@ namespace AztecTariff.Pages
         async Task UpdatePDF()
         {
             if (SelectedSalesArea.Categories.Sum(x => x.LinesRequired) < 5) return;
-            docname = await pDFMaker.MakePdf(SelectedSalesArea, selectedTemplate);
+            docname = await pDFMaker.MakePdf(SelectedSalesArea, selectedTemplate, includeAbv);
             if (string.IsNullOrWhiteSpace(docname)) return;
             Byte[] fileBytes = File.ReadAllBytes(@$"{docname}");
             var content = Convert.ToBase64String(fileBytes);
@@ -334,6 +334,16 @@ namespace AztecTariff.Pages
             isLoading = false;
             await Task.Delay(1);
 
+        }
+
+        async Task IncludeABVChanged()
+        {
+            isLoading = true;
+            await Task.Delay(1);
+            Console.WriteLine(selectedTemplate);
+            await UpdatePDF();
+            isLoading = false;
+            await Task.Delay(1);
         }
         #endregion
 

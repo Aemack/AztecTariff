@@ -232,12 +232,18 @@
                 <PdfViewerToolBarZoomTool />
                 <PdfViewerToolBarSelectionTool />
                 <PdfViewerToolBarSearchTool />
+
+                <PdfViewerToolBarCustomTool>
+                    <label>Include ABV</label>
+                    <TelerikCheckBox @bind-Value="@includeAbv" OnChange="IncludeABVChanged"></TelerikCheckBox>
+                </PdfViewerToolBarCustomTool>
+
                 <PdfViewerToolBarCustomTool>
                     <label>Template Options</label>
-                    @*<TelerikCheckBox  @bind-Value="@onepage"></TelerikCheckBox>*@
                     <TelerikDropDownList OnChange="@TemplateChanged" Data="@templateChoices" @bind-Value="selectedTemplate">
                     </TelerikDropDownList>
                 </PdfViewerToolBarCustomTool>
+
             </PdfViewerToolBar>
         </TelerikPdfViewer>
     </div>

@@ -41,14 +41,15 @@ namespace AztecTariff.Services
         RadFlowDocument document;
         RadFlowDocumentEditor editor;
         List<Product> IncludedProducts;
-
+        bool includeABV;
         int ColumnCount = 2;
         string template;
         // initialize LibreOffice soffice.exe filepath
         string locationOfLibreOfficeSoffice = @"C:\Users\AdamM2\Downloads\LibreOfficePortable\LibreOfficePortable.exe";
         string outputPath = @"C:\Users\AdamM2\OneDrive - Zonal Retail Data Systems Limited\Desktop\TariffNotesNStuff\Test.docx";
-        public async Task<string> MakePdf(FullSalesArea pdfDocMod, string _template)
+        public async Task<string> MakePdf(FullSalesArea pdfDocMod, string _template, bool _includeABV)
         {
+            includeABV = _includeABV;
             template = _template;
             string docxPath = "";
             switch (template)
@@ -188,7 +189,7 @@ namespace AztecTariff.Services
                                 thirdCell.RemoveAllChildren();
 
                                 firstCell.Append(StandardText(product.ProductTariffName));
-                                if (product.ABV == 0)
+                                if (product.ABV == 0 || !includeABV)
                                 {
                                     secondCell.Append(StandardText($""));
                                 }
@@ -316,7 +317,7 @@ namespace AztecTariff.Services
                                 thirdCell.RemoveAllChildren();
 
                                 firstCell.Append(StandardText(product.ProductTariffName));
-                                if (product.ABV == 0)
+                                if (product.ABV == 0 || !includeABV)
                                 {
                                     secondCell.Append(StandardText($""));
                                 }
