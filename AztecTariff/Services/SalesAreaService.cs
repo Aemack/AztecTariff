@@ -78,6 +78,7 @@ namespace AztecTariff.Services
                     SalesAreaName = sa.SAName,    
                     TariffName = sa.TariffName,
                     Included = sa.Included,
+                    FooterMessage = sa.FooterMessage,
                 };
                 fsa.Categories = await _categoryService.GetSalesAreaCategories(sa.SalesAreaId);
 
@@ -119,6 +120,7 @@ namespace AztecTariff.Services
         {
             var sa = await _dbContext.SalesAreas.Where(s => s.SalesAreaId == salesArea.SalesAreaId).FirstAsync();
             sa.TariffName = salesArea.TariffName;
+            sa.FooterMessage = salesArea.FooterMessage;
             sa.Included = salesArea.Included;
             await _dbContext.SaveChangesAsync();
         }

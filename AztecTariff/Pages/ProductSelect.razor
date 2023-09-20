@@ -6,20 +6,19 @@
 @using Microsoft.EntityFrameworkCore;
 @using Telerik.FontIcons;
 @inject IDbContextFactory<ApplicationDBContext> DbFactory
-
+@inherits BasePageClass
 
 @if (isLoading)
 {
     <LoadingOverlayComponent></LoadingOverlayComponent>
 }
 
-
-
-<div @ref="wrapper" class="wrapper" style="height:100%">
+<div class="wrapper" style="height:100%">
     <div class="position-absolute  bottom-0 end-0 m-4">
         <button class="btn btn-primary" style="border-radius:10px;" @onclick="SaveClicked"> <TelerikFontIcon Icon="FontIcon.Save"></TelerikFontIcon> </button>
     </div>
 
+    @*Toast*@
     <div class="position-absolute bottom-0 end-0">
         <Toast @ref="Toast"></Toast>
     </div>
@@ -27,6 +26,7 @@
     <div class="container-fluid p-0" style="height:100%;">
         <div class="row m-0" style="height:100%;">
 
+            @*Categories*@
             <TelerikGrid class="col m-0 p-0" Data="@Categories"
                          SelectionMode="GridSelectionMode.Single"
                          Pageable="false"
@@ -100,6 +100,7 @@
                 </GridColumns>
             </TelerikGrid>
 
+            @*Products*@
             <TelerikGrid class="col m-0 p-0"
                          SelectionMode="GridSelectionMode.Multiple"
                          Pageable="false"
@@ -170,6 +171,7 @@
                 </GridColumns>
             </TelerikGrid>
 
+            @*Selection*@
             <div class="col m-0 p-0 ">
                 <table class="m-0 p-0 k-grid-header-table k-table k-table-md slideInUp bg-light">
                     <thead class="k-table-thead">
@@ -219,198 +221,4 @@
     </div>
 </div>
 
-@code {
-    List<FullCategory> Categories = new List<FullCategory>();
-    TelerikGrid<FullCategory> CategoryGridRef;
-    TelerikGrid<FullProduct> ProductGridRef;
-    ElementReference wrapper;
-    int rowCount = 0;
-    List<FullCategory> OpenHeadings = new List<FullCategory>();
-    List<FullCategory> SelectedCategories = new List<FullCategory>();
-    List<FullProduct> SelectedProducts = new List<FullProduct>();
-    FullCategory SelectedCategory = new FullCategory();
-    private bool AllSelected;
-    bool isLoading;
-    Toast Toast;
 
-    ProductService productService;
-    CategoryService categoryService;
-
-    protected override async Task OnInitializedAsync()
-    {
-        isLoading = true;
-        productService = new ProductService(DbFactory.CreateDbContext());
-        categoryService = new CategoryService(DbFactory.CreateDbContext());
-        await Task.Delay(1);
-        await LoadCategories();
-        isLoading = false;
-        await Task.Delay(1);
-    }
-
-
-    public async Task LoadCategories()
-    {
-
-        Categories = await categoryService.GetAllFullCategories();
-        UpdateSelectAllCheckboxes();
-    }
-
-    public void CategoryCheckboxClicked(FullCategory cat)
-    {
-        isLoading = true;
-        cat.AllSelected = !cat.AllSelected;
-        foreach (var p in cat.Products)
-        {
-            p.Included = cat.AllSelected;
-        }
-        UpdateSelectAllCheckboxes();
-        isLoading = false;
-    }
-
-    public void OnHeadingSelect(IEnumerable<FullCategory> cat)
-    {
-        if (cat.Count() == 0) return;
-        SelectedCategory = cat.First();
-    }
-
-    public void SelectAll()
-    {
-        isLoading = true;
-        AllSelected = !AllSelected;
-        foreach (var cat in Categories)
-        {
-            foreach (var prod in cat.Products)
-            {
-                prod.Included = AllSelected;
-            }
-        }
-        UpdateSelectAllCheckboxes();
-        isLoading = false;
-    }
-
-
-
-    public void CategoryClicked(FullCategory fullCategory)
-    {
-        isLoading = true;
-        if (OpenHeadings.Contains(fullCategory))
-        {
-            OpenHeadings.Remove(fullCategory);
-        }
-        else
-        {
-            OpenHeadings.Add(fullCategory);
-        }
-        isLoading = false;
-    }
-
-    public async Task EditCategory(FullCategory fullCategory, int id)
-    {
-        var currState = CategoryGridRef.GetState();
-        currState.EditItem = null;
-        currState.OriginalEditItem = null;
-
-        FullCategory itemToEdit = FullCategory.GetClonedInstance(fullCategory);
-
-        currState.EditItem = itemToEdit;
-        currState.OriginalEditItem = fullCategory;
-
-        await CategoryGridRef.SetStateAsync(currState);
-
-    }
-
-
-    public async Task EditProduct(FullProduct prod)
-    {
-        var currState = ProductGridRef.GetState();
-        currState.EditItem = null;
-        currState.OriginalEditItem = null;
-
-        FullProduct itemToEdit = FullProduct.GetClonedInstance(prod);
-
-        currState.EditItem = itemToEdit;
-        currState.OriginalEditItem = prod;
-
-        await ProductGridRef.SetStateAsync(currState);
-
-    }
-
-    public void ProductCheckboxClicked(FullProduct p)
-    {
-        isLoading = true;
-        p.Included = !p.Included;
-
-        UpdateSelectAllCheckboxes();
-        isLoading = false;
-    }
-
-    public void UpdateSelectAllCheckboxes()
-    {
-        foreach (var cat in Categories)
-        {
-            if (cat.Products.Count() == cat.Products.Where(p => p.Included == true).Count())
-            {
-                cat.AllSelected = true;
-            }
-            else
-            {
-                cat.AllSelected = false;
-            }
-
-        }
-
-        if (Categories.Count() == Categories.Where(c => c.AllSelected == true).Count())
-        {
-            AllSelected = true;
-        }
-        else
-        {
-            AllSelected = false;
-        }
-    }
-
-    public async void SaveClicked()
-    {
-        isLoading = true;
-        try
-        {
-            await categoryService.UpdateCategories(Categories);
-            foreach (var c in Categories)
-            {
-                await productService.UpdateProducts(c.Products);
-            }
-            await Task.Delay(1);
-            isLoading = false;
-            await Task.Delay(1);
-            await InvokeAsync(() => StateHasChanged());
-
-            await Toast.DisplayMessage("Succesfully Updated Categories", "bg-green");
-        }
-        catch
-        {
-            await Toast.DisplayMessage("Failed To Update Categories", "bg-red");
-        }
-
-    }
-
-    void CategoryUpdated(GridCommandEventArgs args)
-    {
-        FullCategory item = (FullCategory)args.Item;
-        var selectedCat = Categories.Where(c => c.Id == item.Id).First();
-        selectedCat.TariffCategory = item.TariffCategory;
-    }
-    void ProductUpdated(GridCommandEventArgs args)
-    {
-        FullProduct item = (FullProduct)args.Item;
-        foreach (var c in Categories)
-        {
-            var selectedProd = c.Products.Where(p => p.ProductId == item.ProductId).FirstOrDefault();
-            if (selectedProd != null)
-            {
-                selectedProd.ProductTariffName = item.ProductTariffName;
-            }
-
-        }
-
-    }
-}

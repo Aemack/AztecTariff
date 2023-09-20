@@ -10,5 +10,6 @@
         public bool Deleted { get; set; }
         public bool Included { get; set; }
         public string TariffName { get; set; }
+        public string FooterMessage { get; set; }
     }
 }

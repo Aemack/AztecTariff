@@ -5,7 +5,7 @@
 @using Microsoft.EntityFrameworkCore;
 @using Telerik.FontIcons;
 @inject IDbContextFactory<ApplicationDBContext> DbFactory
-
+@inherits BasePageClass
 
 @if (isLoading)
 {
@@ -13,8 +13,9 @@
 }
 
 <div class="container-fluid" style="height:100%">
+    @*Toast*@
     <div class="position-absolute bottom-0 end-0">
-        <Toast @ref="Toast"></Toast>
+    <Toast @ref="Toast"></Toast>
     </div>
 
     <div class="row p-0" style="height:100vh">
@@ -23,6 +24,7 @@
         <TelerikGrid class="col p-0" Data="@Sites" @ref="SiteGrid"
                      SelectionMode="GridSelectionMode.None"
                      Pageable="false"
+                     EditMode="GridEditMode.Popup"
                      OnRowDrop="@((GridRowDropEventArgs<FullSite> args) => SiteMoved(args))">
 
 
@@ -50,20 +52,52 @@
                     @if (SelectedSites.Contains(site))
                     {
 
-                        //Change into TelerikGrid to use built in edit
-                        //if empty, show empty message
-                        @foreach (var sa in site.SalesAreas)
-                        {
-                            <div class="p-3 @((subRowCount++ % 2 ==0) ? "k-alt k-table-alt-row" : "k-table-row")" style="cursor:pointer" @onclick="@(() => SalesAreaSelected(sa))">
-                                <div class="container-fluid" style="padding:0px 0px 0px 25px; cursor:pointer;">
-                                    <Animate Animation=Animations.SlideDown>
-                                        <div class="row">
-                                            <span class="col-9" style="font-size: 14px;">@sa.SalesAreaName</span>
+
+
+
+
+                        <TelerikGrid class="col p-0 grid-no-scroll" Data="@site.SalesAreas" @ref="SAGrid"
+                                     SelectionMode="GridSelectionMode.None"
+                                     EditMode="GridEditMode.Popup"
+                                     Pageable="false"
+                                     Context="context">
+                                     
+                            <GridSettings >
+                                <GridPopupEditSettings MaxHeight="95vh" MaxWidth="95vw"></GridPopupEditSettings>
+                                <GridPopupEditFormSettings ColumnSpacing="20px" Orientation="@FormOrientation.Horizontal" Columns="2" >
+                                    <FormTemplate>
+                                    @{
+                                            EditSA = context.Item as FullSalesArea;
+                                            <TelerikForm Model="@EditSA" OnValidSubmit="@OnValidSubmit">
+                                                <FormItems>
+                                                    <FormItem Field="TariffName" LabelText="Tariff Name"></FormItem>
+                                                    <FormItem Field="FooterMessage" LabelText="Footer Message"></FormItem>
+                                                </FormItems>
+                                                <FormButtons>
+                                                    <TelerikButton Icon="@nameof(FontIcon.Save)" OnClick="SaveSalesArea">Save</TelerikButton>
+                                                    <TelerikButton Icon="@nameof(FontIcon.Cancel)" ButtonType="@ButtonType.Button">Cancel</TelerikButton>
+                                                </FormButtons>
+                                            </TelerikForm>
+                                        }
+                                    </FormTemplate>
+                                </GridPopupEditFormSettings>
+                            </GridSettings>
+
+                            <RowTemplate>
+                                @{
+                                var b = (FullSalesArea)context;
+                                <Animate Animation=Animations.SlideDown>
+                                    <div class="row w-100">
+                                        <div style="cursor:pointer;" class="m-auto p-0 col d-flex justify-content-center align-items-center" @onclick="@(() => EditSalesArea(b))">
+                                            <TelerikFontIcon class="m-auto" Icon="@FontIcon.Pencil"></TelerikFontIcon>
                                         </div>
-                                    </Animate>
-                                </div>
-                            </div>
-                        }
+                                        <span class="col-5" style="font-size: 14px;" @onclick="@(() => SalesAreaSelected(b))">@b.SalesAreaName</span>
+                                        <span class="col-5" style="font-size: 14px;" @onclick="@(() => SalesAreaSelected(b))">@b.TariffName</span>
+                                    </div>
+                                </Animate>
+                                }
+                            </RowTemplate>
+                        </TelerikGrid>
                     }
                 </td>
             </RowTemplate>
@@ -128,11 +162,11 @@
                                 <GridPopupEditFormSettings ColumnSpacing="20px" Orientation="@FormOrientation.Horizontal" Columns="2">
                                     <FormTemplate>
                                         @{
-                                            EditItem = context.Item as FullProduct;
+                                            EditFullProduct = context.Item as FullProduct;
 
-                                            <TelerikForm Model="@EditItem" OnValidSubmit="@OnValidSubmit">
+                                            <TelerikForm Model="@EditFullProduct" OnValidSubmit="@OnValidSubmit">
                                                 <FormItems>
-                                                    <div class="d-flex align-items-center justify-content-center"><i>@EditItem.ProdName</i></div>
+                                                    <div class="d-flex align-items-center justify-content-center"><i>@EditFullProduct.ProdName</i></div>
                                                     <FormItem Field="Price" LabelText="Price"></FormItem>
                                                 </FormItems>
                                                 <FormButtons>
@@ -201,7 +235,7 @@
                 <PdfViewerToolBarCustomTool>
                     <label>Template Options</label>
                     @*<TelerikCheckBox  @bind-Value="@onepage"></TelerikCheckBox>*@
-                    <TelerikDropDownList OnChange="@TemplateChanged" Data="@templateChoices"  @bind-Value="selectedTemplate">
+                    <TelerikDropDownList OnChange="@TemplateChanged" Data="@templateChoices" @bind-Value="selectedTemplate">
                     </TelerikDropDownList>
                 </PdfViewerToolBarCustomTool>
             </PdfViewerToolBar>
@@ -209,263 +243,3 @@
     </div>
 </div>
 
-
-@code {
-    int rowCount;
-    int subRowCount;
-    string docname;
-    TelerikGrid<FullSite> SiteGrid;
-    TelerikGrid<FullCategory> CatGrid;
-    TelerikGrid<FullProduct> ProdGrid;
-    byte[] PdfSource;
-    List<FullSite> Sites = new List<FullSite>();
-    List<FullCategory> SelectedCategories = new List<FullCategory>();
-    List<FullSite> SelectedSites = new List<FullSite>();
-    FullSite SelectedSite = new FullSite();
-    FullSalesArea SelectedSalesArea = new FullSalesArea();
-    PDFMakerService pDFMaker;
-    PricingService pricingService;
-    bool isLoading;
-    public FullProduct EditItem { get; set; }
-    Toast Toast;
-    CategoryService categoryService;
-    SalesAreaService siteService;
-    bool onepage;
-    List<string> templateChoices = new List<string>(){"Single-Page","Multi-Page" };
-    string selectedTemplate;
-
-    protected override async Task OnInitializedAsync()
-    {
-        isLoading = true;
-        selectedTemplate = templateChoices[0];
-        siteService = new SalesAreaService(DbFactory.CreateDbContext());
-        await Task.Delay(1);
-        pDFMaker = new PDFMakerService();
-        pricingService = new PricingService(DbFactory.CreateDbContext());
-        await LoadSites();
-        isLoading = false;
-    }
-
-    private async Task LoadSites()
-    {
-        Sites = await siteService.GetAllFullSites();    
-    }
-
-    public async Task UpdatePDF()
-    {
-        if (SelectedSalesArea.Categories.Sum(x => x.LinesRequired) < 5) return;
-        docname = await pDFMaker.MakePdf(SelectedSalesArea, selectedTemplate);
-        if (string.IsNullOrWhiteSpace(docname)) return;
-        Byte[] fileBytes = File.ReadAllBytes(@$"{docname}");
-        var content = Convert.ToBase64String(fileBytes);
-        if (PdfSource == Convert.FromBase64String(content))
-        {
-            Console.WriteLine("Same thing");
-        }
-        PdfSource = Convert.FromBase64String(content);
-        await Task.Delay(1);
-    }
-
-    public void SiteMoved(GridRowDropEventArgs<FullSite> args)
-    {
-        if (args.Item != null)
-        {
-            var newIndex = (args.DropPosition == GridRowDropPosition.Before) ? int.Parse(args.DestinationIndex) - 1 : int.Parse(args.DestinationIndex);
-            var oldIndex = Sites.IndexOf(args.Item);
-            if (oldIndex > -1)
-            {
-                Sites.RemoveAt(oldIndex);
-
-                if (newIndex > oldIndex) newIndex--;
-                // the actual index could have shifted due to the removal
-
-                Sites.Insert(newIndex, args.Item);
-            }
-        }
-    }
-
-    public async Task CategoryMoved(GridRowDropEventArgs<FullCategory> args)
-    {
-        isLoading = true;
-        if (args.Item != null)
-        {
-            var newIndex = (args.DropPosition == GridRowDropPosition.Before) ? int.Parse(args.DestinationIndex) - 1 : int.Parse(args.DestinationIndex);
-            var oldIndex = SelectedSalesArea.Categories.IndexOf(args.Item);
-            if (oldIndex > -1)
-            {
-                SelectedSalesArea.Categories.RemoveAt(oldIndex);
-
-                if (newIndex > oldIndex) newIndex--;
-                // the actual index could have shifted due to the removal
-
-                SelectedSalesArea.Categories.Insert(newIndex, args.Item);
-                await UpdatePDF();
-            }
-        }
-        isLoading = false;
-    }
-
-    public async Task ProductMoved(GridRowDropEventArgs<FullProduct> args)
-    {
-        throw new NotImplementedException();
-    }
-
-    public void SiteChevronClicked(FullSite site)
-    {
-        isLoading = true;
-        if (SelectedSites.Contains(site))
-        {
-            SelectedSites.Remove(site);
-        }
-        else
-        {
-            SelectedSites.Add(site);
-        }
-        isLoading = false;
-    }
-
-    public async Task SalesAreaSelected(FullSalesArea salesArea)
-    {
-        isLoading = true;
-        await Task.Delay(1);
-        SelectedSalesArea = salesArea;
-        UpdateAllSelected();
-        await UpdatePDF();
-        isLoading = false;
-        await Task.Delay(1);
-    }
-
-    public void CategoryChevronClicked(FullCategory category)
-    {
-        if (SelectedCategories.Contains(category))
-        {
-            SelectedCategories.Remove(category);
-        }
-        else
-        {
-            SelectedCategories.Add(category);
-        }
-    }
-
-    private void UpdateAllSelected()
-    {
-        foreach (var cat in SelectedSalesArea.Categories)
-        {
-            if (cat.IncludedProducts.Count == cat.Products.Count)
-            {
-                cat.AllSelected = true;
-            }
-            else
-            {
-                cat.AllSelected = false;
-            }
-        }
-    }
-
-    private async Task ProductCheckboxClicked(FullProduct product)
-    {
-        isLoading = true;
-        product.Included = !product.Included;
-        UpdateAllSelected();
-        await UpdatePDF();
-        isLoading = false;
-    }
-
-    private async Task CategoryCheckboxClicked(FullCategory category)
-    {
-        isLoading = true;
-        category.AllSelected = !category.AllSelected;
-        foreach (var p in category.Products)
-        {
-            p.Included = category.AllSelected;
-        }
-        UpdateAllSelected();
-        await UpdatePDF();
-        isLoading = false;
-    }
-
-    public async Task SaveClicked()
-    {
-        throw new NotImplementedException();
-    }
-
-    public async Task EditProduct(FullProduct product)
-    {
-        var currState = ProdGrid.GetState();
-        currState.EditItem = null;
-        currState.OriginalEditItem = null;
-
-        FullProduct itemToEdit = FullProduct.GetClonedInstance(product);
-
-        currState.EditItem = itemToEdit;
-        currState.OriginalEditItem = product;
-
-        await ProdGrid.SetStateAsync(currState);
-
-    }
-
-    public void OnValidSubmit()
-    {
-        Console.WriteLine();
-    }
-
-    public async Task SaveProduct()
-    {
-        isLoading = true;
-
-        await ExitEditAsync();
-
-        var foundItem = await pricingService.GetProductPricing(EditItem.ProductId, SelectedSalesArea.SalesAreaId);
-        try
-        {
-            var gridItem = SelectedSalesArea.Categories.Select(x => x.Products.Where(p => p.ProductId == foundItem.ProductId).First()).First();
-            foundItem.Price = EditItem.Price;
-            gridItem.Price = EditItem.Price;
-            await pricingService.UpdatePricing(foundItem);
-            await Task.Delay(1);
-            await Task.Delay(1);
-            await InvokeAsync(() => StateHasChanged());
-
-            await Toast.DisplayMessage("Succesfully Updated Sales Area Price", "bg-green");
-
-        }
-        catch (Exception ex)
-        {
-            await Toast.DisplayMessage("Failed To Update Sales Area Price", "bg-red");
-        }
-
-        await UpdatePDF();
-        isLoading = false;
-    }
-
-    private async Task ExitEditAsync()
-    {
-        var state = ProdGrid?.GetState();
-        state.OriginalEditItem = null;
-        state.EditItem = null;
-        state.InsertedItem = null;
-
-        await ProdGrid?.SetStateAsync(state);
-    }
-
-    public async Task CancelEditProduct()
-    {
-        await ExitEditAsync();
-    }
-
-    public void OnePageClicked()
-    {
-        onepage = !onepage;
-    }
-
-    public async Task TemplateChanged()
-    {
-        isLoading = true;
-        await Task.Delay(1);
-        Console.WriteLine(selectedTemplate);
-        await UpdatePDF();
-        isLoading = false;
-        await Task.Delay(1);
-
-    }
-}
