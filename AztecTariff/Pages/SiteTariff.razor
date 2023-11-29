@@ -6,6 +6,7 @@
 @using Telerik.FontIcons;
 @inject IDbContextFactory<ApplicationDBContext> DbFactory
 @inherits BasePageClass
+@inject Settings settings
 
 @if (isLoading)
 {
@@ -222,7 +223,7 @@
                                                     <p class="m-auto">£@b.Price.ToString("0.00")</p>
                                                 </div>
                                                 <div class="m-auto p-0 col d-flex justify-content-center align-items-ceter">
-                                                    <input class="col m-auto" @bind="b.Included" type="checkbox" style="height:15px;" @onclick="@(() => ProductCheckboxClicked(b))" />
+                                                    <input class="col m-auto" @bind="b.IncludeInPDF" type="checkbox" style="height:15px;" @onclick="@(() => ProductCheckboxClicked(b))" />
                                                 </div>
 
                                             </div>

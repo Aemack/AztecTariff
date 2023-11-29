@@ -38,9 +38,6 @@ namespace AztecTariff.Services
 {
     public class PDFMakerService
     {
-        RadFlowDocument document;
-        RadFlowDocumentEditor editor;
-        List<Product> IncludedProducts;
         bool includeABV;
         int ColumnCount = 2;
         string template;
@@ -60,7 +57,11 @@ namespace AztecTariff.Services
                     break;
                 case "Multi-Page":
                     ColumnCount = 1;
-                    docxPath = GenerateMultiPageTariff(pdfDocMod, outputPath);
+                    docxPath = GenerateMultiPageTariff(pdfDocMod, outputPath, false);
+                    break;
+                case "Landscape Multi-Page":
+                    ColumnCount = 1;
+                    docxPath = GenerateMultiPageTariff(pdfDocMod, outputPath, true);
                     break;
                 default:
                     break;
@@ -143,7 +144,7 @@ namespace AztecTariff.Services
                     int i = 0;
                     foreach (var category in columns[columnIterator])
                     {
-                        if (!category.IncludedProducts.Any()) continue;
+                        if (!category.IncludedInPDFProducts.Any()) continue;
                         var categoryRow = columnTable.Elements<TableRow>().ElementAt(i);
                         var categoryCell1 = categoryRow.Elements<TableCell>().ElementAt(0);
                         var categoryCell2 = categoryRow.Elements<TableCell>().ElementAt(1);
@@ -174,7 +175,7 @@ namespace AztecTariff.Services
 
                         categoryCell1.Append(CategoryText(category.TariffCategory));
                         i++;
-                        foreach (var product in category.IncludedProducts)
+                        foreach (var product in category.IncludedInPDFProducts)
                         {
                             try
                             {
@@ -248,7 +249,7 @@ namespace AztecTariff.Services
             foreach (var column in columns)
             {
 
-                var allProds = column.SelectMany(c => c.IncludedProducts);
+                var allProds = column.SelectMany(c => c.IncludedInPDFProducts);
                 int numberOfTwoLiners = allProds.Where(p => p.ProductTariffName.Length > 15).Count();
 
                 int columnLength = allProds.Count() + numberOfTwoLiners + column.Count;
@@ -259,7 +260,7 @@ namespace AztecTariff.Services
         }
         private int GetTrueColumnLength(List<FullCategory> column)
         {
-            var allProds = column.SelectMany(c => c.IncludedProducts);
+            var allProds = column.SelectMany(c => c.IncludedInPDFProducts);
             int numberOfTwoLiners = allProds.Where(p => p.ProductTariffName.Length > 15).Count();
 
             return allProds.Count() + numberOfTwoLiners + column.Count;
@@ -394,9 +395,17 @@ namespace AztecTariff.Services
         //    return outputPath;
         //}
 
-        public string GenerateMultiPageTariff(FullSalesArea fullSalesArea, string outputPath)
+        public string GenerateMultiPageTariff(FullSalesArea fullSalesArea, string outputPath, bool landscape)
         {
-            var templateLocation = @"C:\Users\AdamM2\OneDrive - Zonal Retail Data Systems Limited\Desktop\TariffNotesNStuff\TEMPLATE1M.docx";
+            string templateLocation;
+            if (landscape)
+            {
+                templateLocation = @"C:\Users\AdamM2\OneDrive - Zonal Retail Data Systems Limited\Desktop\TariffNotesNStuff\TEMPLATE1L.docx";
+            } else
+            {
+                templateLocation = @"C:\Users\AdamM2\OneDrive - Zonal Retail Data Systems Limited\Desktop\TariffNotesNStuff\TEMPLATE1M.docx";
+            }
+            
             File.Delete(outputPath);
             File.Copy(templateLocation, outputPath);
             var columns = SplitByColumns(fullSalesArea.Categories, 1, 5000);
@@ -424,7 +433,7 @@ namespace AztecTariff.Services
                     int i = 0;
                     foreach (var category in columns[columnIterator])
                     {
-                        if (!category.IncludedProducts.Any()) continue;
+                        if (!category.IncludedInPDFProducts.Any()) continue;
                         var categoryRow = columnTable.Elements<TableRow>().ElementAt(i);
                         var categoryCell1 = categoryRow.Elements<TableCell>().ElementAt(0);
                         var categoryCell2 = categoryRow.Elements<TableCell>().ElementAt(1);
@@ -455,7 +464,7 @@ namespace AztecTariff.Services
 
                         categoryCell1.Append(CategoryText(category.TariffCategory));
                         i++;
-                        foreach (var product in category.IncludedProducts)
+                        foreach (var product in category.IncludedInPDFProducts)
                         {
                             try
                             {

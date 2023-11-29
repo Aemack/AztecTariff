@@ -29,7 +29,7 @@ namespace AztecTariff.Pages
         SalesArea eventSAModel;
         FullEvent eventModel;
 
-        List<string> templateChoices = new List<string>() { "Single-Page", "Multi-Page" };
+        List<string> templateChoices = new List<string>() { "Single-Page", "Multi-Page", "Landscape Multi-Page" };
         List<FullSite> Sites = new List<FullSite>();
         List<FullCategory> SelectedCategories = new List<FullCategory>();
         List<FullSite> SelectedSites = new List<FullSite>();
@@ -103,7 +103,7 @@ namespace AztecTariff.Pages
         {
             foreach (var cat in SelectedSalesArea.Categories)
             {
-                if (cat.IncludedProducts.Count == cat.Products.Count)
+                if (cat.IncludedInPDFProducts.Count == cat.IncludedProducts.Count)
                 {
                     cat.AllSelected = true;
                 }
@@ -117,14 +117,16 @@ namespace AztecTariff.Pages
         async Task CategoryCheckboxClicked(FullCategory category)
         {
             isLoading = true;
-            category.AllSelected = !category.AllSelected;
+            await Task.Delay(1);
+            //category.AllSelected = !category.AllSelected;
             foreach (var p in category.Products)
             {
-                p.Included = category.AllSelected;
+                p.IncludeInPDF = category.AllSelected;
             }
             UpdateAllSelected();
             await UpdatePDF();
             isLoading = false;
+            await Task.Delay(1);
         }
         #endregion
 
@@ -324,10 +326,12 @@ namespace AztecTariff.Pages
         async Task ProductCheckboxClicked(FullProduct product)
         {
             isLoading = true;
-            product.Included = !product.Included;
+            await Task.Delay(1);
+            product.IncludeInPDF = !product.IncludeInPDF;
             UpdateAllSelected();
             await UpdatePDF();
             isLoading = false;
+            await Task.Delay(1);
         }
 
         async Task SaveProduct()
@@ -339,7 +343,9 @@ namespace AztecTariff.Pages
             var foundItem = await pricingService.GetProductPricing(EditFullProduct.ProductId, SelectedSalesArea.SalesAreaId);
             try
             {
-                var gridItem = SelectedSalesArea.Categories.Select(x => x.Products.Where(p => p.ProductId == foundItem.ProductId).First()).First();
+                var x = SelectedSalesArea.Categories.Select(x => x.Products.Where(p => p.ProductId == foundItem.ProductId).ToList());
+                var gridItem = x.First().First();
+                //var gridItem = SelectedSalesArea.Categories.Select(x => x.Products.Where(p => p.ProductId == foundItem.ProductId).First()).First();
                 foundItem.Price = EditFullProduct.Price;
                 gridItem.Price = EditFullProduct.Price;
                 await pricingService.UpdatePricing(foundItem);
@@ -373,6 +379,7 @@ namespace AztecTariff.Pages
             await ProdGrid.SetStateAsync(currState);
 
         }
+
         void OnValidSubmit()
         {
             Console.WriteLine();
@@ -398,6 +405,9 @@ namespace AztecTariff.Pages
         async Task UpdatePDF()
         {
             if (SelectedSalesArea.Categories.Sum(x => x.LinesRequired) < 5) return;
+
+
+
             docname = await pDFMaker.MakePdf(SelectedSalesArea, selectedTemplate, includeAbv);
             if (string.IsNullOrWhiteSpace(docname)) return;
             Byte[] fileBytes = File.ReadAllBytes(@$"{docname}");

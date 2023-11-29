@@ -126,6 +126,7 @@ namespace AztecTariff.Services
                     ProdName = prod.ProdName,
                     ProductId = prod.ProductId,
                     ProductTariffName = prod.ProductTariffName,
+                    IncludeInPDF = true,
                 };
 
                 fullProds.Add(fp);

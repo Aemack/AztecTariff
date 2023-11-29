@@ -9,8 +9,9 @@ namespace AztecTariff.Models
         public string CategoryName { get; set; }
         public List<FullProduct> Products { get; set; } = new List<FullProduct>();
         public List<FullProduct> IncludedProducts => Products.Where(p => p.Included).ToList();
+        public List<FullProduct> IncludedInPDFProducts => IncludedProducts.Where(p => p.IncludeInPDF).ToList();
         public bool AllSelected { get; set; }
-        public int LinesRequired => (IncludedProducts.Count > 0) ? IncludedProducts.Count + 1 : 0;
+        public int LinesRequired => (IncludedInPDFProducts.Count > 0) ? IncludedInPDFProducts.Count + 1 : 0;
         public static FullCategory GetClonedInstance(FullCategory itmToClone)
         {
             return new FullCategory()
