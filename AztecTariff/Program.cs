@@ -18,7 +18,7 @@ builder.Services.AddDbContextFactory<ApplicationDBContext>(opt =>
 builder.Services.AddTelerikBlazor();
 
 builder.Services.AddScoped<ProductService>();
-builder.Services.AddScoped<Settings>();
+builder.Services.AddSingleton<Settings>();
 builder.Services.AddScoped<CategoryService>();
 builder.Services.AddScoped<PricingService>();
 builder.Services.AddScoped<SalesAreaService>();

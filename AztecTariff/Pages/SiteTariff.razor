@@ -180,7 +180,6 @@
                         <TelerikGrid class="col p-0 grid-no-scroll" Data="category.IncludedProducts" @ref="ProdGrid"
                                      SelectionMode="GridSelectionMode.None"
                                      Pageable="false"
-                                     RowDraggable="true"
                                      EditMode="@GridEditMode.Popup"
                                      OnRowDrop="@((GridRowDropEventArgs<FullProduct> args) => ProductMoved(args))">
 
