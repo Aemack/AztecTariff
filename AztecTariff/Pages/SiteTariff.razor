@@ -15,7 +15,7 @@
 <div class="container-fluid" style="height:100%">
     @*Toast*@
     <div class="position-absolute bottom-0 end-0">
-    <Toast @ref="Toast"></Toast>
+        <Toast @ref="Toast"></Toast>
     </div>
 
     <div class="row p-0" style="height:100vh">
@@ -61,12 +61,12 @@
                                      EditMode="GridEditMode.Popup"
                                      Pageable="false"
                                      Context="context">
-                                     
-                            <GridSettings >
+
+                            <GridSettings>
                                 <GridPopupEditSettings MaxHeight="95vh" MaxWidth="95vw"></GridPopupEditSettings>
-                                <GridPopupEditFormSettings ColumnSpacing="20px" Orientation="@FormOrientation.Horizontal" Columns="2" >
+                                <GridPopupEditFormSettings ColumnSpacing="20px" Orientation="@FormOrientation.Horizontal" Columns="2">
                                     <FormTemplate>
-                                    @{
+                                        @{
                                             EditSA = context.Item as FullSalesArea;
                                             <TelerikForm Model="@EditSA" OnValidSubmit="@OnValidSubmit">
                                                 <FormItems>
@@ -75,7 +75,7 @@
                                                 </FormItems>
                                                 <FormButtons>
                                                     <TelerikButton Icon="@nameof(FontIcon.Save)" OnClick="SaveSalesArea">Save</TelerikButton>
-                                                    <TelerikButton Icon="@nameof(FontIcon.Cancel)" ButtonType="@ButtonType.Button">Cancel</TelerikButton>
+                                                    <TelerikButton Icon="@nameof(FontIcon.Cancel)" OnClick="CloseModal" ButtonType="@ButtonType.Button">Cancel</TelerikButton>
                                                 </FormButtons>
                                             </TelerikForm>
                                         }
@@ -85,16 +85,42 @@
 
                             <RowTemplate>
                                 @{
-                                var b = (FullSalesArea)context;
-                                <Animate Animation=Animations.SlideDown>
-                                    <div class="row w-100">
-                                        <div style="cursor:pointer;" class="m-auto p-0 col d-flex justify-content-center align-items-center" @onclick="@(() => EditSalesArea(b))">
-                                            <TelerikFontIcon class="m-auto" Icon="@FontIcon.Pencil"></TelerikFontIcon>
+                                    var b = (FullSalesArea)context;
+                                    <Animate Animation=Animations.SlideDown>
+                                        <div class="row w-100">
+                                            <div style="cursor:pointer;" class="m-auto p-0 col d-flex justify-content-center align-items-center" @onclick="@(() => EditSalesArea(b))">
+                                                <TelerikFontIcon class="m-auto" Icon="@FontIcon.Pencil"></TelerikFontIcon>
+                                            </div>
+                                            <span class="col-4" style="font-size: 14px;" @onclick="@(() => SalesAreaSelected(b))">@b.SalesAreaName</span>
+                                            <span class="col-5" style="font-size: 14px;" @onclick="@(() => SalesAreaSelected(b))">@b.TariffName</span>
+                                            <div style="cursor:pointer;" class="m-auto p-0 col d-flex justify-content-center align-items-center" @onclick="@(() => AddEventPricing(b))">
+                                                <TelerikFontIcon class="m-auto" Icon="@FontIcon.Plus"></TelerikFontIcon>
+                                            </div>
+
                                         </div>
-                                        <span class="col-5" style="font-size: 14px;" @onclick="@(() => SalesAreaSelected(b))">@b.SalesAreaName</span>
-                                        <span class="col-5" style="font-size: 14px;" @onclick="@(() => SalesAreaSelected(b))">@b.TariffName</span>
-                                    </div>
-                                </Animate>
+                                    </Animate>
+                                    @if (b.Events.Any())
+                                    {
+                                        <TelerikGrid Data="@b.Events" Context="tevent">
+                                            <RowTemplate>
+                                                <Animate Animation=Animations.SlideDown>
+                                                    <div class="row w-100 eventrow"  >
+                                                        <div class="m-auto p-0 col" ></div>
+                                                        <div style="cursor:pointer;" class="m-auto p-0 col d-flex justify-content-center align-items-center" @onclick="@(() => EditSalesArea(tevent))">
+                                                            <TelerikFontIcon class="m-auto" Icon="@FontIcon.Pencil"></TelerikFontIcon>
+                                                        </div>
+
+                                                        <span class="col-4" style="font-size: 14px;" @onclick="@(() => SalesAreaSelected(tevent))">@tevent.SalesAreaName</span>
+                                                        <span class="col-5" style="font-size: 14px;" @onclick="@(() => SalesAreaSelected(tevent))">@tevent.TariffName</span>
+                                                        <div style="cursor:pointer;" class="m-auto p-0 col d-flex justify-content-center align-items-center" @onclick="@(() => RemoveEventPricing(tevent))">
+                                                            <TelerikFontIcon class="m-auto" Icon="@FontIcon.Minus"></TelerikFontIcon>
+                                                        </div>
+
+                                                    </div>
+                                                </Animate>
+                                            </RowTemplate>
+                                        </TelerikGrid>
+                                    }
                                 }
                             </RowTemplate>
                         </TelerikGrid>
@@ -248,4 +274,51 @@
         </TelerikPdfViewer>
     </div>
 </div>
+<TelerikWindow Modal="true"
+@bind-Visible="@isAddEventModalVisible"
+               CloseOnOverlayClick="true">
+    <WindowTitle>
+        Add Event Pricing
+    </WindowTitle>
+    <WindowContent>
 
+        <EditForm Model="@eventSAModel">
+            <TelerikStackLayout Orientation="StackLayoutOrientation.Horizontal">
+                <label>Event Tariff Name</label>
+                <InputText @bind-Value="eventSAModel.TariffName" />
+            </TelerikStackLayout>
+
+            <TelerikStackLayout Orientation="StackLayoutOrientation.Horizontal">
+                <label>Event Footer Message</label>
+                <InputText @bind-Value="eventSAModel.FooterMessage" />
+            </TelerikStackLayout>
+
+            <TelerikStackLayout Orientation="StackLayoutOrientation.Horizontal">
+                <label>Base Price Multiplier</label>
+                <InputNumber @bind-Value="basePriceMultiplier" />
+            </TelerikStackLayout>
+
+            <TelerikButton OnClick="SaveEventPricing">Add</TelerikButton>
+        </EditForm>
+
+    </WindowContent>
+    <WindowActions>
+        <WindowAction Name="Close" />
+    </WindowActions>
+</TelerikWindow>
+
+<TelerikWindow Modal="true" @bind-Visible="@isDeleteEventModalVisible" CloseOnOverlayClick="true">
+    <WindowTitle>
+        Remove Event
+    </WindowTitle>
+    <WindowContent>
+        <EditForm Model="@eventModel">
+            <p>Are you sure you want to delete @eventModel.TariffName</p>
+            <TelerikButton @onclick="@(() => ConfirmRemoveEventPricing(eventModel))">Delete</TelerikButton>
+            <TelerikButton OnClick="CloseModal">Cancel</TelerikButton>
+        </EditForm>
+    </WindowContent>
+    <WindowActions>
+        <WindowAction Name="Close" />
+    </WindowActions>
+</TelerikWindow>

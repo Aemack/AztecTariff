@@ -59,7 +59,7 @@ namespace AztecTariff.Services
 
         private async Task UpdateDatabase()
         {
-            await siteService.AddSites(Sites);
+            await siteService.AddSalesAreas(Sites);
             await productService.AddProducts(Products);
             await pricingService.AddPricings(Pricings);
         }

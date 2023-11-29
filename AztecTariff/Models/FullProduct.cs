@@ -10,6 +10,7 @@
         public decimal Price { get; set; }
         public double ABV { get; set; }
         public bool Included { get; set; }
+        public bool IncludeInPDF { get; set; }
         public static FullProduct GetClonedInstance(FullProduct itmToClone)
         {
             return new FullProduct()

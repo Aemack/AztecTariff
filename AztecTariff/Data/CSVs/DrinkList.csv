@@ -1,61 +1,91 @@
 ProductId,EstateId,EntityCode,Portion,ProdName,CategoryId,CategoryName,Deleted,ABV,TariffCategory,ProductTariffName,Included
-11000000000,34,1000000000,1,Wtrmn'sWtr,2,MnrlWtr,False,0,Mineral Water,Waterman's Water,True
-11000000001,34,1000000001,1,BlWtr,2,MnrlWtr,False,0,Mineral Water,Blue Water,True
-11000000002,34,1000000002,1,GrffnCl,1,SftDrnks,False,0,Soft Drinks,Griffin Cola,True
-11000000003,34,1000000003,1,Slr'sAmntld,3,Aprtfs&Frtfd,False,5.52,Apertifs & Fortified,Sailor's Amontilado,True
-11000000004,34,1000000004,1,Slr'sCdr,4,BttldBr&Cdr,False,2.14,Bottled Beer & Cider,Sailor's Cider,True
-11000000005,34,1000000005,1,BrGn,8,Sprts,False,7.22,Spirits,Bear Gin,True
-11000000006,34,1000000006,1,StrCdr,4,BttldBr&Cdr,False,1.02,Bottled Beer & Cider,Star Cider,True
-11000000007,34,1000000007,1,BllBr,4,BttldBr&Cdr,False,2.19,Bottled Beer & Cider,Bell Beer,True
-11000000008,34,1000000008,1,LprdCl,1,SftDrnks,False,0,Soft Drinks,Leopard Cola,True
-11000000009,34,1000000009,1,LmbOrngJc,7,Mxrs,False,0,Mixers,Lamb Orange Juice,True
-11000000010,34,1000000010,1,HrpTncWtr,7,Mxrs,False,0,Mixers,Harp Tonic Water,True
-11000000011,34,1000000011,1,BllBr,0,DrghtBr&Cdr,False,5.19,Draught Beer & Cider,Bell Beer,True
-11000000012,34,1000000012,1,PhnxChmpgn,6,Wn,False,4.88,Wine,Phoenix Champagne,True
-11000000013,34,1000000013,1,PrkBr,0,DrghtBr&Cdr,False,8.02,Draught Beer & Cider,Park Beer,True
-11000000014,34,1000000014,1,BlckFshbwl,5,CcktlsAlchlc,False,4.3,Cocktails Alcoholic,Black Fishbowl,True
-11000000015,34,1000000015,1,GryhndGn,8,Sprts,False,5.12,Spirits,Greyhound Gin,True
-11000000016,34,1000000016,1,RbnVdk,8,Sprts,False,8.93,Spirits,Robin Vodka,True
-11000000017,34,1000000017,1,BrFshbwl,5,CcktlsAlchlc,False,4.1,Cocktails Alcoholic,Boar Fishbowl,True
-11000000018,34,1000000018,1,WlpckOrngJc,7,Mxrs,False,0,Mixers,Woolpack Orange Juice,True
-11000000019,34,1000000019,1,Trk'sHdBr,0,DrghtBr&Cdr,False,1.95,Draught Beer & Cider,Turk's Head Beer,True
-11000000020,34,1000000020,1,FlcnWtr,2,MnrlWtr,False,0,Mineral Water,Falcon Water,True
-11000000021,34,1000000021,1,GldnGn,8,Sprts,False,3.27,Spirits,Golden Gin,True
-11000000022,34,1000000022,1,Wtrmn'sWtr,2,MnrlWtr,False,0,Mineral Water,Waterman's Water,True
-11000000023,34,1000000023,1,WndmllBr,4,BttldBr&Cdr,False,9.89,Bottled Beer & Cider,Windmill Beer,True
-11000000024,34,1000000024,1,CchAmntld,3,Aprtfs&Frtfd,False,2.75,Apertifs & Fortified,Coach Amontilado,True
-11000000025,34,1000000025,1,CstlFshbwl,5,CcktlsAlchlc,False,1.28,Cocktails Alcoholic,Castle Fishbowl,True
-11000000026,34,1000000026,1,BrWtr,2,MnrlWtr,False,0,Mineral Water,Bear Water,True
-11000000027,34,1000000027,1,WhtCdr,4,BttldBr&Cdr,False,9.65,Bottled Beer & Cider,White Cider,True
-11000000028,34,1000000028,1,Trk'sHdOnThRcks,5,CcktlsAlchlc,False,0.47,Cocktails Alcoholic,Turk's Head On The Rocks,True
-11000000029,34,1000000029,1,FrryBr,0,DrghtBr&Cdr,False,0.05,Draught Beer & Cider,Ferry Beer,True
-11000000030,34,1000000030,1,BllChmpgn,6,Wn,False,4.74,Wine,Bell Champagne,True
-11000000031,34,1000000031,1,BrCdr,0,DrghtBr&Cdr,False,3,Draught Beer & Cider,Bear Cider,True
-11000000032,34,1000000032,1,DgTncWtr,7,Mxrs,False,0,Mixers,Dog Tonic Water,True
-11000000033,34,1000000033,1,LprdOnThRcks,5,CcktlsAlchlc,False,8.04,Cocktails Alcoholic,Leopard On The Rocks,True
-11000000034,34,1000000034,1,MrmdFzz,1,SftDrnks,False,0,Soft Drinks,Mermaid Fizz,True
-11000000035,34,1000000035,1,Kng'sChmpgn,6,Wn,False,1.27,Wine,King's Champagne,True
-11000000036,34,1000000036,1,AnchrVdk,8,Sprts,False,7.84,Spirits,Anchor Vodka,True
-11000000037,34,1000000037,1,StrWtr,2,MnrlWtr,False,0,Mineral Water,Star Water,True
-11000000038,34,1000000038,1,Msn'sFzz,1,SftDrnks,False,0,Soft Drinks,Mason's Fizz,True
-11000000039,34,1000000039,1,NwChmpgn,6,Wn,False,6.08,Wine,New Champagne,True
-11000000040,34,1000000040,1,Ng'sWtr,2,MnrlWtr,False,0,Mineral Water,Nag's Water,True
-11000000041,34,1000000041,1,PrkBr,0,DrghtBr&Cdr,False,0.41,Draught Beer & Cider,Park Beer,True
-11000000042,34,1000000042,1,WlpckGn,8,Sprts,False,1.3,Spirits,Woolpack Gin,True
-11000000043,34,1000000043,1,DgOnThRcks,5,CcktlsAlchlc,False,5.68,Cocktails Alcoholic,Dog On The Rocks,True
-11000000044,34,1000000044,1,WgnBr,4,BttldBr&Cdr,False,3.78,Bottled Beer & Cider,Wagon Beer,True
-11000000045,34,1000000045,1,RbnCdr,0,DrghtBr&Cdr,False,3.56,Draught Beer & Cider,Robin Cider,True
-11000000046,34,1000000046,1,Cttgcll,3,Aprtfs&Frtfd,False,4.3,Apertifs & Fortified,Cottagecello,True
-11000000047,34,1000000047,1,FlwrCl,1,SftDrnks,False,0,Soft Drinks,Flower Cola,True
-11000000048,34,1000000048,1,CstlWtr,2,MnrlWtr,False,0,Mineral Water,Castle Water,True
-11000000049,34,1000000049,1,OldTncWtr,7,Mxrs,False,0,Mixers,Old Tonic Water,True
-11000000050,34,1000000050,1,Qn'sOnThRcks,5,CcktlsAlchlc,False,8.2,Cocktails Alcoholic,Queen's On The Rocks,True
-11000000051,34,1000000051,1,FlcnTncWtr,7,Mxrs,False,0,Mixers,Falcon Tonic Water,True
-11000000052,34,1000000052,1,Slr'sAmntld,3,Aprtfs&Frtfd,False,1.99,Apertifs & Fortified,Sailor's Amontilado,True
-11000000053,34,1000000053,1,OttrTncWtr,7,Mxrs,False,0,Mixers,Otter Tonic Water,True
-11000000054,34,1000000054,1,UncrnFshbwl,5,CcktlsAlchlc,False,4.88,Cocktails Alcoholic,Unicorn Fishbowl,True
-11000000055,34,1000000055,1,FlcnAmntld,3,Aprtfs&Frtfd,False,5.61,Apertifs & Fortified,Falcon Amontilado,True
-11000000056,34,1000000056,1,NwCdr,4,BttldBr&Cdr,False,9.72,Bottled Beer & Cider,New Cider,True
-11000000057,34,1000000057,1,NwCdr,4,BttldBr&Cdr,False,2.6,Bottled Beer & Cider,New Cider,True
-11000000058,34,1000000058,1,Hrscll,3,Aprtfs&Frtfd,False,9.2,Apertifs & Fortified,Horsecello,True
-11000000059,34,1000000059,1,GtFzz,1,SftDrnks,False,0,Soft Drinks,Goat Fizz,True
+11000000000,34,1000000000,1,WhtTncWtr,7,Mxrs,False,0,Mixers,White Tonic Water,True
+11000000001,34,1000000001,1,LprdChrdny,6,Wn,False,0.55,Wine,Leopard Chardonay,True
+11000000002,34,1000000002,1,AnchrAmntld,3,Aprtfs&Frtfd,False,6.09,Apertifs & Fortified,Anchor Amontilado,True
+11000000003,34,1000000003,1,BllOrngJc,7,Mxrs,False,0,Mixers,Bell Orange Juice,True
+11000000004,34,1000000004,1,EglBr,0,DrghtBr&Cdr,False,2.21,Draught Beer & Cider,Eagle Beer,True
+11000000005,34,1000000005,1,ArmsTncWtr,7,Mxrs,False,0,Mixers,Arms Tonic Water,True
+11000000006,34,1000000006,1,DkWtr,2,MnrlWtr,False,0,Mineral Water,Duke Water,True
+11000000007,34,1000000007,1,Wtrmn'sAmntld,3,Aprtfs&Frtfd,False,3.98,Apertifs & Fortified,Waterman's Amontilado,True
+11000000008,34,1000000008,1,PrkBr,4,BttldBr&Cdr,False,8.97,Bottled Beer & Cider,Park Beer,True
+11000000009,34,1000000009,1,WgnBr,0,DrghtBr&Cdr,False,0.17,Draught Beer & Cider,Wagon Beer,True
+11000000010,34,1000000010,1,OwlCl,1,SftDrnks,False,0,Soft Drinks,Owl Cola,True
+11000000011,34,1000000011,1,DrgnChmpgn,6,Wn,False,1.05,Wine,Dragon Champagne,True
+11000000012,34,1000000012,1,GrnAmntld,3,Aprtfs&Frtfd,False,5.07,Apertifs & Fortified,Green Amontilado,True
+11000000013,34,1000000013,1,WlpckBr,0,DrghtBr&Cdr,False,7.08,Draught Beer & Cider,Woolpack Beer,True
+11000000014,34,1000000014,1,RylFshbwl,5,CcktlsAlchlc,False,9.19,Cocktails Alcoholic,Royal Fishbowl,True
+11000000015,34,1000000015,1,PlghWtr,2,MnrlWtr,False,0,Mineral Water,Plough Water,True
+11000000016,34,1000000016,1,CrwnOnThRcks,5,CcktlsAlchlc,False,6.81,Cocktails Alcoholic,Crown On The Rocks,True
+11000000017,34,1000000017,1,OttrCdr,0,DrghtBr&Cdr,False,9.55,Draught Beer & Cider,Otter Cider,True
+11000000018,34,1000000018,1,CstlChmpgn,6,Wn,False,0.25,Wine,Castle Champagne,True
+11000000019,34,1000000019,1,RsBr,0,DrghtBr&Cdr,False,1.36,Draught Beer & Cider,Rose Beer,True
+11000000020,34,1000000020,1,BrrlBr,0,DrghtBr&Cdr,False,4.09,Draught Beer & Cider,Barrel Beer,True
+11000000021,34,1000000021,1,FxOnThRcks,5,CcktlsAlchlc,False,1.65,Cocktails Alcoholic,Fox On The Rocks,True
+11000000022,34,1000000022,1,FlcnCl,1,SftDrnks,False,0,Soft Drinks,Falcon Cola,True
+11000000023,34,1000000023,1,HrpWtr,2,MnrlWtr,False,0,Mineral Water,Harp Water,True
+11000000024,34,1000000024,1,GldnCdr,4,BttldBr&Cdr,False,6.85,Bottled Beer & Cider,Golden Cider,True
+11000000025,34,1000000025,1,WlpckBr,4,BttldBr&Cdr,False,4.93,Bottled Beer & Cider,Woolpack Beer,True
+11000000026,34,1000000026,1,CchWtr,2,MnrlWtr,False,0,Mineral Water,Coach Water,True
+11000000027,34,1000000027,1,NwChrdny,6,Wn,False,8.72,Wine,New Chardonay,True
+11000000028,34,1000000028,1,HrpTncWtr,7,Mxrs,False,0,Mixers,Harp Tonic Water,True
+11000000029,34,1000000029,1,RbnGn,8,Sprts,False,5.67,Spirits,Robin Gin,True
+11000000030,34,1000000030,1,ThrTnsVdk,8,Sprts,False,8.17,Spirits,Three Tuns Vodka,True
+11000000031,34,1000000031,1,RylCdr,0,DrghtBr&Cdr,False,7.85,Draught Beer & Cider,Royal Cider,True
+11000000032,34,1000000032,1,AnchrGn,8,Sprts,False,2.08,Spirits,Anchor Gin,True
+11000000033,34,1000000033,1,Eglcll,3,Aprtfs&Frtfd,False,6.9,Apertifs & Fortified,Eaglecello,True
+11000000034,34,1000000034,1,Anchrcll,3,Aprtfs&Frtfd,False,5.7,Apertifs & Fortified,Anchorcello,True
+11000000035,34,1000000035,1,GlbChrdny,6,Wn,False,3.44,Wine,Globe Chardonay,True
+11000000036,34,1000000036,1,Wndmllcll,3,Aprtfs&Frtfd,False,1.73,Apertifs & Fortified,Windmillcello,True
+11000000037,34,1000000037,1,GldnGn,8,Sprts,False,7.84,Spirits,Golden Gin,True
+11000000038,34,1000000038,1,CttgFzz,1,SftDrnks,False,0,Soft Drinks,Cottage Fizz,True
+11000000039,34,1000000039,1,GrnFzz,1,SftDrnks,False,0,Soft Drinks,Green Fizz,True
+11000000040,34,1000000040,1,WhtCdr,4,BttldBr&Cdr,False,6.93,Bottled Beer & Cider,White Cider,True
+11000000041,34,1000000041,1,DgWtr,2,MnrlWtr,False,0,Mineral Water,Dog Water,True
+11000000042,34,1000000042,1,PhnxCdr,0,DrghtBr&Cdr,False,1.16,Draught Beer & Cider,Phoenix Cider,True
+11000000043,34,1000000043,1,RylBr,0,DrghtBr&Cdr,False,7.44,Draught Beer & Cider,Royal Beer,True
+11000000044,34,1000000044,1,FrryTncWtr,7,Mxrs,False,0,Mixers,Ferry Tonic Water,True
+11000000045,34,1000000045,1,BlChrdny,6,Wn,False,8.79,Wine,Blue Chardonay,True
+11000000046,34,1000000046,1,WhtFshbwl,5,CcktlsAlchlc,False,7.68,Cocktails Alcoholic,White Fishbowl,True
+11000000047,34,1000000047,1,SttnTncWtr,7,Mxrs,False,0,Mixers,Station Tonic Water,True
+11000000048,34,1000000048,1,Slr'sVdk,8,Sprts,False,2.75,Spirits,Sailor's Vodka,True
+11000000049,34,1000000049,1,Qn'sChmpgn,6,Wn,False,1.59,Wine,Queen's Champagne,True
+11000000050,34,1000000050,1,Slr'sOrngJc,7,Mxrs,False,0,Mixers,Sailor's Orange Juice,True
+11000000051,34,1000000051,1,FlcnOrngJc,7,Mxrs,False,0,Mixers,Falcon Orange Juice,True
+11000000052,34,1000000052,1,BrdgOrngJc,7,Mxrs,False,0,Mixers,Bridge Orange Juice,True
+11000000053,34,1000000053,1,MtrChrdny,6,Wn,False,1.12,Wine,Mitre Chardonay,True
+11000000054,34,1000000054,1,WgnWtr,2,MnrlWtr,False,0,Mineral Water,Wagon Water,True
+11000000055,34,1000000055,1,FrryCdr,4,BttldBr&Cdr,False,3.01,Bottled Beer & Cider,Ferry Cider,True
+11000000056,34,1000000056,1,PnglctcGn,8,Sprts,False,7.4,Spirits,Pangalactic Gin,True
+11000000057,34,1000000057,1,OttrGn,8,Sprts,False,6.49,Spirits,Otter Gin,True
+11000000058,34,1000000058,1,JllyChrdny,6,Wn,False,3.23,Wine,Jolly Chardonay,True
+11000000059,34,1000000059,1,ArmsOnThRcks,5,CcktlsAlchlc,False,7.72,Cocktails Alcoholic,Arms On The Rocks,True
+11000000060,34,1000000060,1,DgBr,0,DrghtBr&Cdr,False,9.98,Draught Beer & Cider,Dog Beer,True
+11000000061,34,1000000061,1,FxBr,4,BttldBr&Cdr,False,9.99,Bottled Beer & Cider,Fox Beer,True
+11000000062,34,1000000062,1,RylCl,1,SftDrnks,False,0,Soft Drinks,Royal Cola,True
+11000000063,34,1000000063,1,FshrmnBr,0,DrghtBr&Cdr,False,9.71,Draught Beer & Cider,Fisherman Beer,True
+11000000064,34,1000000064,1,HrsOrngJc,7,Mxrs,False,0,Mixers,Horse Orange Juice,True
+11000000065,34,1000000065,1,PhnxWtr,2,MnrlWtr,False,0,Mineral Water,Phoenix Water,True
+11000000066,34,1000000066,1,OkOnThRcks,5,CcktlsAlchlc,False,2.35,Cocktails Alcoholic,Oak On The Rocks,True
+11000000067,34,1000000067,1,RlwyCl,1,SftDrnks,False,0,Soft Drinks,Railway Cola,True
+11000000068,34,1000000068,1,PrncWtr,2,MnrlWtr,False,0,Mineral Water,Prince Water,True
+11000000069,34,1000000069,1,RylBr,4,BttldBr&Cdr,False,9.52,Bottled Beer & Cider,Royal Beer,True
+11000000070,34,1000000070,1,LnGn,8,Sprts,False,8.22,Spirits,Lion Gin,True
+11000000071,34,1000000071,1,CstlCdr,4,BttldBr&Cdr,False,2.38,Bottled Beer & Cider,Castle Cider,True
+11000000072,34,1000000072,1,LnFshbwl,5,CcktlsAlchlc,False,4.06,Cocktails Alcoholic,Lion Fishbowl,True
+11000000073,34,1000000073,1,Trvllr'sCdr,4,BttldBr&Cdr,False,3.72,Bottled Beer & Cider,Traveller's Cider,True
+11000000074,34,1000000074,1,UncrnOrngJc,7,Mxrs,False,0,Mixers,Unicorn Orange Juice,True
+11000000075,34,1000000075,1,DkWtr,2,MnrlWtr,False,0,Mineral Water,Duke Water,True
+11000000076,34,1000000076,1,MrmdCl,1,SftDrnks,False,0,Soft Drinks,Mermaid Cola,True
+11000000077,34,1000000077,1,RlwyOnThRcks,5,CcktlsAlchlc,False,8.09,Cocktails Alcoholic,Railway On The Rocks,True
+11000000078,34,1000000078,1,Trk'sHdcll,3,Aprtfs&Frtfd,False,1.05,Apertifs & Fortified,Turk's Headcello,True
+11000000079,34,1000000079,1,DkBr,4,BttldBr&Cdr,False,7.57,Bottled Beer & Cider,Duke Beer,True
+11000000080,34,1000000080,1,PlghGn,8,Sprts,False,8.53,Spirits,Plough Gin,True
+11000000081,34,1000000081,1,HrpGn,8,Sprts,False,6.71,Spirits,Harp Gin,True
+11000000082,34,1000000082,1,WlpckWtr,2,MnrlWtr,False,0,Mineral Water,Woolpack Water,True
+11000000083,34,1000000083,1,MrmdBr,0,DrghtBr&Cdr,False,2.86,Draught Beer & Cider,Mermaid Beer,True
+11000000084,34,1000000084,1,AnchrBr,0,DrghtBr&Cdr,False,0.44,Draught Beer & Cider,Anchor Beer,True
+11000000085,34,1000000085,1,RmBr,4,BttldBr&Cdr,False,9,Bottled Beer & Cider,Ram Beer,True
+11000000086,34,1000000086,1,HrOnThRcks,5,CcktlsAlchlc,False,3.11,Cocktails Alcoholic,Hare On The Rocks,True
+11000000087,34,1000000087,1,Prnccll,3,Aprtfs&Frtfd,False,1.15,Apertifs & Fortified,Princecello,True
+11000000088,34,1000000088,1,JllyWtr,2,MnrlWtr,False,0,Mineral Water,Jolly Water,True
+11000000089,34,1000000089,1,RbnOnThRcks,5,CcktlsAlchlc,False,1.42,Cocktails Alcoholic,Robin On The Rocks,True

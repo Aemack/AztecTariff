@@ -361,3 +361,11 @@ main {
 .grid-no-scroll .k-grid-footer-wrap {
     border-right-width: 0;
 }
+
+/*Sales areaa */
+
+.eventrow {
+    background: rgba(var(--bs-primary-rgb));
+    color: white;
+    cursor:pointer;
+}

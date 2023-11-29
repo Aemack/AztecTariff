@@ -4,6 +4,7 @@ using AztecTariff.Shared;
 using Microsoft.AspNetCore.Components;
 using Telerik.Blazor.Components;
 using Telerik.Blazor;
+using System.Diagnostics.Contracts;
 
 namespace AztecTariff.Pages
 {
@@ -25,7 +26,8 @@ namespace AztecTariff.Pages
         PDFMakerService pDFMaker;
         PricingService pricingService;
 
-
+        SalesArea eventSAModel;
+        FullEvent eventModel;
 
         List<string> templateChoices = new List<string>() { "Single-Page", "Multi-Page" };
         List<FullSite> Sites = new List<FullSite>();
@@ -42,12 +44,16 @@ namespace AztecTariff.Pages
         int subRowCount;
         bool includeAbv;
         bool isLoading;
+        bool isAddEventModalVisible;
+        bool isDeleteEventModalVisible;
+        decimal basePriceMultiplier;
         #endregion
         protected override async Task OnInitializedAsync()
         {
             isLoading = true;
             selectedTemplate = templateChoices[0];
             saService = new SalesAreaService(DbFactory.CreateDbContext());
+            categoryService = new CategoryService(DbFactory.CreateDbContext());
             await Task.Delay(1);
             pDFMaker = new PDFMakerService();
             pricingService = new PricingService(DbFactory.CreateDbContext());
@@ -228,6 +234,85 @@ namespace AztecTariff.Pages
 
             await SAGrid.SetStateAsync(currState);
         }
+
+        async Task AddEventPricing(FullSalesArea fsa)
+        {
+            var salesarea = await saService.GetSalesArea(fsa.SalesAreaId);
+            var sa = new SalesArea()
+            {
+                SiteName = salesarea.SiteName,
+                SiteId = salesarea.SiteId,
+                isEvent = true,
+                EstateId = salesarea.EstateId,
+                SAName = $"{salesarea.SAName} Event",
+                Included = true,
+                OriginalSalesAreaId = salesarea.SalesAreaId,
+            };
+            basePriceMultiplier = 1;
+            eventSAModel = sa;
+            isAddEventModalVisible = true;
+
+        }
+
+        async Task SaveEventPricing()
+        {
+
+            isAddEventModalVisible = false;
+            isLoading = true;
+            await Task.Delay(1);
+            var sa = eventSAModel;
+            int newSaId = await saService.AddSalesArea(eventSAModel);
+            //Make new pricing records for all the products
+            var products = pricingService.GetPricingBySA(sa.OriginalSalesAreaId);
+            foreach(var p in products)
+            {
+                await pricingService.AddPricing(new Pricing()
+                {
+                    EstateId = sa.EstateId,
+                    ProductId = p.ProductId,
+                    SalesAreaId = newSaId,
+                    Price = p.Price * basePriceMultiplier,
+                });
+            }
+            var allSAs = Sites.SelectMany(x => x.SalesAreas).ToList();
+            var selectedSA = allSAs.Where(y => y.SalesAreaId == eventSAModel.OriginalSalesAreaId).First();
+            
+
+            var createdEvent = await saService.GetSalesArea(newSaId);
+            var newEvent = await saService.ToFullEvent(createdEvent);
+            selectedSA.Events.Add(newEvent);
+
+
+            SelectedSalesArea = newEvent;
+            await LoadSites();
+            UpdateAllSelected();
+            await UpdatePDF();
+
+            isLoading = false;
+            await Task.Delay(1);
+        }
+
+        void RemoveEventPricing(FullEvent fe)
+        {
+            eventModel = fe;
+            isDeleteEventModalVisible = true;   
+        }
+
+        async Task ConfirmRemoveEventPricing(FullSalesArea fe)
+        {
+            isLoading = true;
+            await saService.DeleteSalesArea(fe.SalesAreaId);
+            await pricingService.DeletePricingBySA(fe.SalesAreaId);
+            await LoadSites();
+            isLoading = false;
+            isDeleteEventModalVisible = false;
+        }
+
+        void CloseModal()
+        {
+            isDeleteEventModalVisible = false;
+            isAddEventModalVisible = false;
+        }
         #endregion
 
         #region Products
@@ -346,6 +431,8 @@ namespace AztecTariff.Pages
             await Task.Delay(1);
         }
         #endregion
+
+
 
     }
 }

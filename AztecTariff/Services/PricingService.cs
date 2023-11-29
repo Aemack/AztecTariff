@@ -82,5 +82,16 @@ namespace AztecTariff.Services
 
             await _dbContext.SaveChangesAsync();
         }
+
+        public List<Pricing> GetPricingBySA(int? salesAreaId)
+        {
+            return _dbContext.Pricing.Where(p => p.SalesAreaId == salesAreaId).ToList();
+        }
+
+        public async Task DeletePricingBySA(int salesAreaId)
+        {
+            _dbContext.Pricing.RemoveRange(_dbContext.Pricing.Where(p => p.SalesAreaId == salesAreaId));
+            await _dbContext.SaveChangesAsync();
+        }
     }
 }
