@@ -4,9 +4,11 @@
 @using AztecTariff.Services;
 @using Microsoft.EntityFrameworkCore;
 @using Telerik.FontIcons;
+
 @inject IDbContextFactory<ApplicationDBContext> DbFactory
 @inherits BasePageClass
 @inject Settings settings
+@inject NavigationManager nav
 
 @if (isLoading)
 {
@@ -27,8 +29,6 @@
                      Pageable="false"
                      EditMode="GridEditMode.Popup"
                      OnRowDrop="@((GridRowDropEventArgs<FullSite> args) => SiteMoved(args))">
-
-
             <RowTemplate Context="site">
                 <td class="k-table-td row">
                     <div class="row p-2">
@@ -52,11 +52,6 @@
                     }
                     @if (SelectedSites.Contains(site))
                     {
-
-
-
-
-
                         <TelerikGrid class="col p-0 grid-no-scroll" Data="@site.SalesAreas" @ref="SAGrid"
                                      SelectionMode="GridSelectionMode.None"
                                      EditMode="GridEditMode.Popup"
@@ -72,6 +67,7 @@
                                             <TelerikForm Model="@EditSA" OnValidSubmit="@OnValidSubmit">
                                                 <FormItems>
                                                     <FormItem Field="TariffName" LabelText="Tariff Name"></FormItem>
+                                                    <FormItem Field="HeaderMessage" LabelText="Header Message"></FormItem>
                                                     <FormItem Field="FooterMessage" LabelText="Footer Message"></FormItem>
                                                 </FormItems>
                                                 <FormButtons>
@@ -274,6 +270,7 @@
         </TelerikPdfViewer>
     </div>
 </div>
+
 <TelerikWindow Modal="true"
 @bind-Visible="@isAddEventModalVisible"
                CloseOnOverlayClick="true">

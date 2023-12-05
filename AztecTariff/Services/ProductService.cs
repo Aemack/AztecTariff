@@ -10,10 +10,13 @@ namespace AztecTariff.Services
     {
         private readonly ApplicationDBContext _dbContext;
         private PricingService _pricingService;
-        public ProductService(ApplicationDBContext dbContext)
+        Settings _settings;
+        public ProductService(ApplicationDBContext dbContext, Settings settings)
         {
+            _settings = settings;
             _dbContext = dbContext;
-            _pricingService = new PricingService(dbContext);
+            _pricingService = new PricingService(dbContext, settings);
+
         }
 
 
@@ -23,7 +26,7 @@ namespace AztecTariff.Services
             await _dbContext.SaveChangesAsync();
 
             var products = new List<Product>();
-            using (var reader = new StreamReader("Data/CSVs/DrinkList.csv"))
+            using (var reader = new StreamReader(Path.Combine(_settings.CSVFileLocation, "CSVs/DrinkList.csv")))
             using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
             {
                 products = csv.GetRecords<Product>().ToList();

@@ -12,10 +12,10 @@ namespace AztecTariff.Services
         private readonly ProductService _productService;
         private readonly PricingService _pricingService;
 
-        public CategoryService(ApplicationDBContext dbContext)
+        public CategoryService(ApplicationDBContext dbContext, Settings settings)
         {
             _dbContext = dbContext;
-            _productService = new ProductService(dbContext);
+            _productService = new ProductService(dbContext, settings);
         }
 
         public async Task<List<FullCategory>> GetSalesAreaCategories(int salesAreaId)

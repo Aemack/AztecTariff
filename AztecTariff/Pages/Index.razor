@@ -27,10 +27,18 @@
     <div class="cube"></div>
     <div class="cube"></div>
     <div class="cube"></div>
+
+
     <div class="d-flex flex-row justify-content-center align-items-center h-100 login__title">
         @if (settings.IsLoggedIn)
         {
-            <img src="images/Zonal-logo-MW.svg" />
+            <a href="/SiteTariff" class="link-unstyled">
+                <div class="d-flex flex-column">
+                    <img src="images/zonallogo.png" />
+                    @*<img src="images/Zonal-logo-MW.svg" class="h-100" />*@
+                    <h2 class="text-center">Aztec Tariff</h2>
+                </div>
+            </a>
         }
         else
         {
@@ -49,15 +57,15 @@
                                 <p class="my-auto" style="font-size:32px">Username:</p>
                             </div>
                             <div class="col d-flex flex-column justify-content-center" onkeydown="@Enter">
-                                <TelerikTextBox @bind-Value="username" Class="@usernameErrorClass"  />
+                                <TelerikTextBox @bind-Value="username" Class="@usernameErrorClass" />
                             </div>
                         </div>
                         @if (usernameError)
                         {
                             <Blazorise.Animate.Animate Animation="Animations.SlideDown">
-                            <div class="d-flex flex-column justify-content-center text-center">
-                                <label class="text-danger fs-6">Username is not valid</label>
-                            </div>
+                                <div class="d-flex flex-column justify-content-center text-center">
+                                    <label class="text-danger fs-6">Username is not valid</label>
+                                </div>
                             </Blazorise.Animate.Animate>
                         }
                         <div class="row">
@@ -71,9 +79,9 @@
                         @if (passwordError)
                         {
                             <Blazorise.Animate.Animate Animation="Animations.SlideDown">
-                            <div class="d-flex flex-column justify-content-center text-center">
-                                <label class="text-danger fs-6">Password is not valid</label>
-                            </div>
+                                <div class="d-flex flex-column justify-content-center text-center">
+                                    <label class="text-danger fs-6">Password is not valid</label>
+                                </div>
                             </Blazorise.Animate.Animate>
                         }
                         <div class="row">

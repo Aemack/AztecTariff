@@ -11,12 +11,14 @@ namespace AztecTariff.Services
         private readonly ApplicationDBContext _dbContext;
         ProductService _productService;
         CategoryService _categoryService;
+        Settings _settings;
 
-        public SalesAreaService(ApplicationDBContext dbContext)
+        public SalesAreaService(ApplicationDBContext dbContext, Settings settings)
         {
+            _settings = settings;
             _dbContext = dbContext;
-            _productService = new ProductService(dbContext);
-            _categoryService = new CategoryService(dbContext);
+            _productService = new ProductService(dbContext, settings);
+            _categoryService = new CategoryService(dbContext, settings);
         }
 
         public async Task PopulateSalesAreaTable()
@@ -25,7 +27,7 @@ namespace AztecTariff.Services
             await _dbContext.SaveChangesAsync();
 
             var sites = new List<SalesArea>();
-            using (var reader = new StreamReader("Data/CSVs/Sites.csv"))
+            using (var reader = new StreamReader(Path.Combine(_settings.CSVFileLocation, "CSVs/Sites.csv")))
             using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
             {
                 sites = csv.GetRecords<SalesArea>().ToList();
@@ -85,6 +87,7 @@ namespace AztecTariff.Services
                     TariffName = sa.TariffName,
                     Included = sa.Included,
                     FooterMessage = sa.FooterMessage,
+                    HeaderMessage = sa.HeaderMessage
                 };
                 fsa.Events = await GetEventBySalesArea(sa.SalesAreaId);
                 fsa.Categories = await _categoryService.GetSalesAreaCategories(sa.SalesAreaId);
@@ -119,6 +122,7 @@ namespace AztecTariff.Services
                 SalesAreaId = sa.SalesAreaId,
                 SalesAreaName = sa.SAName,
                 FooterMessage = sa.FooterMessage,
+                HeaderMessage = sa.HeaderMessage,
                 Included = sa.Included,
                 TariffName = sa.TariffName
             };
@@ -152,6 +156,7 @@ namespace AztecTariff.Services
             sa.SAName = salesArea.SAName;
             sa.TariffName = salesArea.TariffName;
             sa.SiteName = salesArea.SiteName;
+            sa.HeaderMessage = salesArea.HeaderMessage;
             sa.SiteId = salesArea.SiteId;
             sa.Deleted = salesArea.Deleted;
             sa.Included = salesArea.Included;
@@ -163,6 +168,7 @@ namespace AztecTariff.Services
             var sa = await _dbContext.SalesAreas.Where(s => s.SalesAreaId == salesArea.SalesAreaId).FirstAsync();
             sa.TariffName = salesArea.TariffName;
             sa.FooterMessage = salesArea.FooterMessage;
+            sa.HeaderMessage = salesArea.HeaderMessage;
             sa.Included = salesArea.Included;
             await _dbContext.SaveChangesAsync();
         }

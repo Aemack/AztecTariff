@@ -7,6 +7,7 @@ namespace AztecTariff.Data
     {
         public ApplicationDBContext(DbContextOptions<ApplicationDBContext> options) : base(options)
         {
+            Database.EnsureCreated();
         }
         protected override void OnConfiguring(DbContextOptionsBuilder options)
             => options.UseSqlite("DataSource = AztecTariff.db;");

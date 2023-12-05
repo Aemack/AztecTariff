@@ -1,5 +1,8 @@
-﻿using AztecTariff.Services;
+﻿using AztecTariff.Models;
+using AztecTariff.Services;
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
+using System.Xml.Serialization;
 
 namespace AztecTariff.Pages
 {
@@ -10,9 +13,9 @@ namespace AztecTariff.Pages
         SalesAreaService siteService;
         ProductService productService;
         PricingService pricingService;
-        
 
-        bool isLoading; string username;
+        bool isLoading; 
+        string username;
         string password;
         bool usernameError;
         bool passwordError;
@@ -22,10 +25,16 @@ namespace AztecTariff.Pages
         #endregion
         protected override void OnInitialized()
         {
-            categoryService = new CategoryService(DbFactory.CreateDbContext());
-            pricingService = new PricingService(DbFactory.CreateDbContext());
-            productService = new ProductService(DbFactory.CreateDbContext());
-            siteService = new SalesAreaService(DbFactory.CreateDbContext());
+            //settings.TemplateFolderLocation = "C:\Users\AdamM2\OneDrive - Zonal Retail Data Systems Limited\Desktop\TariffNotesNStuff\New folder";
+            //settings.CSVFileLocation = "C:\Users\AdamM2\OneDrive - Zonal Retail Data Systems Limited\Desktop\TariffNotesNStuff\New folder";
+            //settings.WordFileLocation = "C:\Users\AdamM2\OneDrive - Zonal Retail Data Systems Limited\Desktop\TariffNotesNStuff\New folder\Test.docx";
+            //settings.LibreLocation = @"C:\Users\AdamM2\Downloads\LibreOfficePortable\LibreOfficePortable.exe";
+            
+
+            categoryService = new CategoryService(DbFactory.CreateDbContext(), settings);
+            pricingService = new PricingService(DbFactory.CreateDbContext(), settings);
+            productService = new ProductService(DbFactory.CreateDbContext(), settings);
+            siteService = new SalesAreaService(DbFactory.CreateDbContext(), settings);
             usernameError = false;
             passwordError = false;
             //PopulateDatabase();
@@ -35,24 +44,60 @@ namespace AztecTariff.Pages
         {
             isLoading = true;
             await Task.Delay(1);
-            Thread.Sleep(5000);
+            if (!File.Exists("settings.xml"))
+            {
+                File.Create("settings.xml").Close();
+            }
+            var s = LoadSettingsFromXml("settings.xml");
+            if (s != null)
+            {
+                settings.CSVFileLocation = s.CSVFileLocation;
+                settings.WordFileLocation = s.WordFileLocation;
+                settings.LibreLocation = s.LibreLocation;
+                settings.TemplateFolderLocation = s.TemplateFolderLocation;
+            }
             settings.IsLoggedIn = LoginDetailsValid();
+
             isLoading = false;
             await Task.Delay(1);
-            if (settings.IsLoggedIn)
+            if (settings.IsLoggedIn && settings.IsValid())
             {
                 nav.NavigateTo("/SiteTariff");
+            } else if (!settings.IsValid())
+            {
+                nav.NavigateTo("/Settings");
             }
+        }
 
+        public static Settings LoadSettingsFromXml(string filePath)
+        {
+            try
+            {
+                XmlSerializer serializer = new XmlSerializer(typeof(Settings));
+
+                using (StreamReader reader = new StreamReader(filePath))
+                {
+                    return (Settings)serializer.Deserialize(reader);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading settings: {ex.Message}");
+                return null;
+            }
         }
 
         private async void PopulateDatabase()
         {
-            var ds = new DrinkListCreatorService();
-            ds.CreateCSVFiles();
-            await productService.PopulateProductsTable();
-            await pricingService.PopulatePricingsTable();
-            await siteService.PopulateSalesAreaTable();
+            var ds = new DrinkListCreatorService(settings);
+            var allProds = await productService.GetAllProducts();
+            if (allProds.Count == 0)
+            {
+                ds.CreateCSVFiles();
+                await productService.PopulateProductsTable();
+                await pricingService.PopulatePricingsTable();
+                await siteService.PopulateSalesAreaTable();
+            }
         }
 
         public bool LoginDetailsValid()

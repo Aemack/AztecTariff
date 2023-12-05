@@ -9,6 +9,11 @@ namespace AztecTariff.Services
 {
     public class DrinkListCreatorService
     {
+        Settings _settings;
+        public DrinkListCreatorService(Settings settings)
+        {
+            _settings = settings;
+        }
         string[] words = new string[]
         {
             "Anchor", "Angel", "Arms", "Barrel", "Bear", "Bell", "Black", "Blue",
@@ -72,9 +77,9 @@ namespace AztecTariff.Services
             Pricings = new List<Pricing>();
             var r = new Random();
             int i = 0;
-            foreach(var site in Sites)
+            foreach (var site in Sites)
             {
-                foreach (var prod in Products) 
+                foreach (var prod in Products)
                 {
                     i++;
                     var p = new Pricing()
@@ -91,8 +96,16 @@ namespace AztecTariff.Services
 
                 }
             }
-
-            using (var writer = new StreamWriter("Data/CSVs/Pricings.csv"))
+            string csvLocation = "";
+            if (string.IsNullOrWhiteSpace(_settings.CSVFileLocation))
+            {
+                csvLocation = @"C:\Users\AdamM2\OneDrive - Zonal Retail Data Systems Limited\Desktop\TariffNotesNStuff\New Folder";
+            }
+            else
+            {
+                csvLocation = _settings.CSVFileLocation;
+            }
+            using (var writer = new StreamWriter(Path.Combine(csvLocation, "CSVs/Pricings.csv")))
             using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
             {
                 csv.WriteRecords(Pricings);
@@ -105,18 +118,18 @@ namespace AztecTariff.Services
 
             var r = new Random();
             int idcount = 1;
-            for(int i = 0; i < num; i++)
+            for (int i = 0; i < num; i++)
             {
                 var siteName = $"{GenerateName()} {pubNameEndings[r.Next(0, pubNameEndings.Length - 1)]}";
                 var estateid = 34;
 
-                for(int j = 0; j < r.Next(2,5); j++)
+                for (int j = 0; j < r.Next(2, 5); j++)
                 {
                     SalesArea site = new SalesArea()
                     {
                         EstateId = estateid,
                         SiteName = siteName,
-                        SiteId = i+1,
+                        SiteId = i + 1,
                         SalesAreaId = idcount,
                         SAName = salesAreaNames[j],
                         Deleted = false,
@@ -128,7 +141,16 @@ namespace AztecTariff.Services
                 }
             }
 
-            using (var writer = new StreamWriter("Data/CSVs/Sites.csv"))
+            string csvLocation = "";
+            //if (string.IsNullOrWhiteSpace(_settings.CSVFileLocation))
+            //{
+            csvLocation = @"C:\Users\AdamM2\OneDrive - Zonal Retail Data Systems Limited\Desktop\TariffNotesNStuff\New Folder";
+            //}
+            //else
+            //{
+            //    csvLocation = _settings.CSVFileLocation;
+            //}
+            using (var writer = new StreamWriter(Path.Combine(csvLocation, "CSVs/Sites.csv")))
             using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
             {
                 csv.WriteRecords(Sites);
@@ -167,7 +189,7 @@ namespace AztecTariff.Services
                 var drinkName = GenerateName();
 
 
-                int randNum = r.Next(0, headings.Count()-1);
+                int randNum = r.Next(0, headings.Count() - 1);
                 newProd.CategoryId = randNum;
                 var cat = headings[randNum];
                 newProd.CategoryName = ShorthandText(cat);
@@ -224,7 +246,7 @@ namespace AztecTariff.Services
                         ABV = newProd.ABV,
                         CategoryId = newProd.CategoryId,
                         CategoryName = newProd.CategoryName,
-                        ProductTariffName =  drinkName.Trim(),
+                        ProductTariffName = drinkName.Trim(),
                         TariffCategory = newProd.TariffCategory,
                     };
                     differentPortionProd.ProductId = int.Parse($"{differentPortionProd.Portion}{differentPortionProd.EntityCode}");
@@ -239,11 +261,21 @@ namespace AztecTariff.Services
                 newProd.Included = true;
                 Products.Add(newProd);
             }
-            using (var writer = new StreamWriter("Data/CSVs/DrinkList.csv"))
-            using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
-            {
-                csv.WriteRecords(Products);
-            }
+
+            string csvLocation = "";
+            //if (string.IsNullOrWhiteSpace(_settings.CSVFileLocation))
+            //{
+                csvLocation = @"C:\Users\AdamM2\OneDrive - Zonal Retail Data Systems Limited\Desktop\TariffNotesNStuff\New Folder";
+                //}
+                //else
+                //{
+                //    csvLocation = _settings.CSVFileLocation;
+                //}
+                using (var writer = new StreamWriter(Path.Combine(csvLocation, "CSVs/DrinkList.csv")))
+                using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
+                {
+                    csv.WriteRecords(Products);
+                }
         }
 
         private string ShorthandText(string v)

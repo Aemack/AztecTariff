@@ -3,6 +3,7 @@ using System;
 using AztecTariff.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AztecTariff.Migrations
 {
     [DbContext(typeof(ApplicationDBContext))]
-    partial class ApplicationDBContextModelSnapshot : ModelSnapshot
+    [Migration("20231205143002_ab")]
+    partial class ab
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "7.0.5");
@@ -102,10 +105,6 @@ namespace AztecTariff.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("FooterMessage")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("HeaderMessage")
                         .IsRequired()
                         .HasColumnType("TEXT");
 

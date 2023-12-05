@@ -43,12 +43,16 @@ namespace AztecTariff.Services
         string template;
         // initialize LibreOffice soffice.exe filepath
         string locationOfLibreOfficeSoffice = @"C:\Users\AdamM2\Downloads\LibreOfficePortable\LibreOfficePortable.exe";
-        string outputPath = @"C:\Users\AdamM2\OneDrive - Zonal Retail Data Systems Limited\Desktop\TariffNotesNStuff\Test.docx";
+        //string outputPath = @"C:\Users\AdamM2\OneDrive - Zonal Retail Data Systems Limited\Desktop\TariffNotesNStuff\Test.docx";
+        Models.Settings _settings;
         public async Task<string> MakePdf(FullSalesArea pdfDocMod, string _template, bool _includeABV)
         {
+            string outputPath = Path.Combine(_settings.CSVFileLocation, "Test.docx");
             includeABV = _includeABV;
-            template = _template;
+            template = _template;  
             string docxPath = "";
+
+
             switch (template)
             {
                 case "Single-Page":
@@ -70,53 +74,47 @@ namespace AztecTariff.Services
             return ConvertDocxToPDF(docxPath);
         }
 
+        public PDFMakerService(Models.Settings settings)
+        {
+            _settings = settings;
+        }
 
         private string ConvertDocxToPDF(string docxPath)
         {
-            var test = new ReportGenerator(locationOfLibreOfficeSoffice);
-            // convert DOCX to PDF
-            test.Convert(docxPath, @$"Data\tmpPdf.pdf");
-            return @$"Data\tmpPdf.pdf";
+            var reportgen = new ReportGenerator(_settings.LibreLocation);
+            var outputpath = Path.Combine(_settings.CSVFileLocation, @$"tmpPdf.pdf");
+            reportgen.Convert(docxPath, outputpath);
+            return outputpath;
+
+
         }
 
         public string GenerateSinglePageTariff(FullSalesArea fullSalesArea, string outputPath, bool rerun = false)
         {
             int totalLinesRequired = fullSalesArea.Categories.Sum(p => p.LinesRequired);
 
-
             List<List<FullCategory>> columns;
             string templateLocation = "";
 
-
-
             if (totalLinesRequired < 70)
             {
-                templateLocation = @"C:\Users\AdamM2\OneDrive - Zonal Retail Data Systems Limited\Desktop\TariffNotesNStuff\TEMPLATE2.docx";
+                templateLocation = Path.Combine(_settings.TemplateFolderLocation, "TEMPLATE2.docx");
                 ColumnCount = 2;
                 columns = SplitByColumns(fullSalesArea.Categories, 2, 50);
             }
             else if (totalLinesRequired < 100)
             {
-                templateLocation = @"C:\Users\AdamM2\OneDrive - Zonal Retail Data Systems Limited\Desktop\TariffNotesNStuff\TEMPLATE3.docx";
+                templateLocation = Path.Combine(_settings.TemplateFolderLocation, "TEMPLATE3.docx");
                 ColumnCount = 3;
                 columns = SplitByColumns(fullSalesArea.Categories, 3, 50);
             }
             else
             {
-                templateLocation = @"C:\Users\AdamM2\OneDrive - Zonal Retail Data Systems Limited\Desktop\TariffNotesNStuff\TEMPLATE4.docx";
+                templateLocation = Path.Combine(_settings.TemplateFolderLocation, "TEMPLATE4.docx");
                 ColumnCount = 4;
                 columns = SplitByColumns(fullSalesArea.Categories, 4, 50);
-                var columnLengths = GetTrueColumnLengths(columns);
-                //if (columnLengths.Where(x => x > 35).Any())
-                //{
-                //    throw new Exception("You need to either make more columns or make it automatically change to multipage");
-                //}
-            } //else
-              //{
-              //    return GenerateMultiPageTariff(fullSalesArea, outputPath);
-              //}
+            } 
 
-            var colLengths = GetTrueColumnLengths(columns);
 
             File.Delete(outputPath);
             File.Copy(templateLocation, outputPath);
@@ -126,11 +124,17 @@ namespace AztecTariff.Services
                 foreach (var headerPart in doc.MainDocumentPart.HeaderParts)
                 {
                     //Gets the text in headers
-                    foreach (var currentText in headerPart.RootElement.Descendants<DocumentFormat.OpenXml.Wordprocessing.Text>())
+                    var y = headerPart.RootElement.Descendants<DocumentFormat.OpenXml.Wordprocessing.Text>();
+                    foreach (var currentText in y)
                     {
                         currentText.Text = currentText.Text.Replace("[TITLE]", fullSalesArea.TariffName);
+                        currentText.Text = currentText.Text.Replace("[SUBTITLE]", fullSalesArea.HeaderMessage);
                     }
-                }
+                    
+
+                    
+                }             
+                
                 #endregion
                 #region Tables
 
@@ -266,146 +270,19 @@ namespace AztecTariff.Services
             return allProds.Count() + numberOfTwoLiners + column.Count;
         }
 
-        //public string GenerateMultiPageTariff(FullSalesArea fullSalesArea, string outputPath)
-        //{
-        //    var templateLocation = @"C:\Users\AdamM2\OneDrive - Zonal Retail Data Systems Limited\Desktop\TariffNotesNStuff\TEMPLATE2M.docx";
-        //    File.Delete(outputPath);
-        //    File.Copy(templateLocation, outputPath);
-        //    var columns = SplitByColumns(fullSalesArea.Categories, 1, 1000000);
-        //    using (WordprocessingDocument doc = WordprocessingDocument.Open(outputPath, true))
-        //    {
-        //        #region Header
-        //        foreach (var headerPart in doc.MainDocumentPart.HeaderParts)
-        //        {
-        //            //Gets the text in headers
-        //            foreach (var currentText in headerPart.RootElement.Descendants<DocumentFormat.OpenXml.Wordprocessing.Text>())
-        //            {
-        //                currentText.Text = currentText.Text.Replace("[TITLE]", fullSalesArea.TariffName);
-        //            }
-        //        }
-        //        #endregion
-        //        #region Tables
-
-        //        Table table = doc.MainDocumentPart.Document.Body.Elements<Table>().First();
-        //        TableRow row = table.Elements<TableRow>().ElementAt(0);
-
-        //        //int columnIterator = 0;
-        //        //foreach (var columnCell in row.Elements<TableCell>())
-        //        //{
-        //        var containercell = row.Elements<TableCell>().First();
-        //        Table columnTable = containercell.Elements<Table>().First();
-
-
-
-        //        int i = 0;
-        //        foreach (var category in columns[0])
-        //        {
-        //            if (!category.IncludedProducts.Any()) continue;
-        //            var categoryRow = columnTable.Elements<TableRow>().ElementAt(i);
-        //            var categoryCell1 = categoryRow.Elements<TableCell>().ElementAt(0);
-        //            var categoryCell2 = categoryRow.Elements<TableCell>().ElementAt(1);
-        //            var categoryCell3 = categoryRow.Elements<TableCell>().ElementAt(2);
-
-        //            categoryCell1.RemoveAllChildren();
-
-        //            var cell1Props = new TableCellProperties();
-        //            cell1Props.Append(new HorizontalMerge()
-        //            {
-        //                Val = MergedCellValues.Restart
-        //            });
-        //            var cell2Props = new TableCellProperties();
-        //            cell2Props.Append(new HorizontalMerge()
-        //            {
-        //                Val = MergedCellValues.Continue
-        //            });
-        //            var cell3Props = new TableCellProperties();
-        //            cell3Props.Append(new HorizontalMerge()
-        //            {
-        //                Val = MergedCellValues.Continue
-        //            });
-
-        //            categoryCell1.Append(cell1Props);
-        //            categoryCell2.Append(cell2Props);
-        //            categoryCell3.Append(cell3Props);
-
-
-        //            categoryCell1.Append(CategoryText(category.TariffCategory));
-        //            i++;
-        //            foreach (var product in category.IncludedProducts)
-        //            {
-        //                try
-        //                {
-        //                    var tableRow = columnTable.Elements<TableRow>().ElementAt(i);
-        //                    var firstCell = tableRow.Elements<TableCell>().ElementAt(0);
-        //                    var secondCell = tableRow.Elements<TableCell>().ElementAt(1);
-        //                    var thirdCell = tableRow.Elements<TableCell>().ElementAt(2);
-
-
-        //                    firstCell.RemoveAllChildren();
-        //                    secondCell.RemoveAllChildren();
-        //                    thirdCell.RemoveAllChildren();
-
-        //                    firstCell.Append(StandardText(product.ProductTariffName));
-        //                    if (product.ABV == 0 || !includeABV)
-        //                    {
-        //                        secondCell.Append(StandardText($""));
-        //                    }
-        //                    else
-        //                    {
-        //                        secondCell.Append(ItalicText($"{product.ABV.ToString()}%"));
-        //                    }
-
-        //                    thirdCell.Append(StandardText($"£{product.Price.ToString("0.00")}"));
-        //                    i++;
-        //                }
-        //                catch
-        //                {
-        //                    break;
-        //                }
-        //            }
-        //        }
-
-        //        List<TableRow> rowsToDelete = new List<TableRow>();
-        //        foreach (var tablerow in columnTable.Elements<TableRow>())
-        //        {
-        //            if (string.IsNullOrWhiteSpace(tablerow.InnerText))
-        //            {
-        //                rowsToDelete.Add(tablerow);
-        //            }
-        //        }
-
-        //        foreach (var r in rowsToDelete)
-        //        {
-        //            columnTable.RemoveChild(r);
-        //        }
-
-        //        #endregion
-        //        #region Footer
-        //        foreach (var footerPart in doc.MainDocumentPart.FooterParts)
-        //        {
-        //            //Gets the text in headers
-        //            foreach (var currentText in footerPart.RootElement.Descendants<DocumentFormat.OpenXml.Wordprocessing.Text>())
-        //            {
-        //                currentText.Text = currentText.Text.Replace("[FOOTER]", fullSalesArea.FooterMessage);
-        //            }
-        //        }
-        //        #endregion
-        //    }
-
-        //    return outputPath;
-        //}
 
         public string GenerateMultiPageTariff(FullSalesArea fullSalesArea, string outputPath, bool landscape)
         {
             string templateLocation;
             if (landscape)
             {
-                templateLocation = @"C:\Users\AdamM2\OneDrive - Zonal Retail Data Systems Limited\Desktop\TariffNotesNStuff\TEMPLATE1L.docx";
-            } else
-            {
-                templateLocation = @"C:\Users\AdamM2\OneDrive - Zonal Retail Data Systems Limited\Desktop\TariffNotesNStuff\TEMPLATE1M.docx";
+                templateLocation = Path.Combine(_settings.TemplateFolderLocation, "TEMPLATE1L.docx");
             }
-            
+            else
+            {
+                templateLocation = Path.Combine(_settings.TemplateFolderLocation, "TEMPLATE1M.docx");
+            }
+
             File.Delete(outputPath);
             File.Copy(templateLocation, outputPath);
             var columns = SplitByColumns(fullSalesArea.Categories, 1, 5000);
@@ -418,6 +295,7 @@ namespace AztecTariff.Services
                     foreach (var currentText in headerPart.RootElement.Descendants<DocumentFormat.OpenXml.Wordprocessing.Text>())
                     {
                         currentText.Text = currentText.Text.Replace("[TITLE]", fullSalesArea.TariffName);
+                        currentText.Text = currentText.Text.Replace("[SUBTITLE]", fullSalesArea.HeaderMessage);
                     }
                 }
                 #endregion

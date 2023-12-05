@@ -17,14 +17,12 @@ builder.Services.AddDbContextFactory<ApplicationDBContext>(opt =>
 // Add Telerik Blazor server side services
 builder.Services.AddTelerikBlazor();
 
-builder.Services.AddScoped<ProductService>();
 builder.Services.AddSingleton<Settings>();
+
+builder.Services.AddScoped<ProductService>();
 builder.Services.AddScoped<CategoryService>();
 builder.Services.AddScoped<PricingService>();
 builder.Services.AddScoped<SalesAreaService>();
-//builder.Services.AddScoped<NavigationManager>();
-
-
 
 var app = builder.Build();
 

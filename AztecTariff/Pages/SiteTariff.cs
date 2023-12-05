@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Components;
 using Telerik.Blazor.Components;
 using Telerik.Blazor;
 using System.Diagnostics.Contracts;
+using System.Xml.Serialization;
 
 namespace AztecTariff.Pages
 {
@@ -50,13 +51,18 @@ namespace AztecTariff.Pages
         #endregion
         protected override async Task OnInitializedAsync()
         {
+            if (!settings.IsLoggedIn)
+            {
+                nav.NavigateTo("/");
+                return;
+            }
             isLoading = true;
             selectedTemplate = templateChoices[0];
-            saService = new SalesAreaService(DbFactory.CreateDbContext());
-            categoryService = new CategoryService(DbFactory.CreateDbContext());
+            saService = new SalesAreaService(DbFactory.CreateDbContext(), settings);
+            categoryService = new CategoryService(DbFactory.CreateDbContext(), settings);
             await Task.Delay(1);
-            pDFMaker = new PDFMakerService();
-            pricingService = new PricingService(DbFactory.CreateDbContext());
+            pDFMaker = new PDFMakerService(settings);
+            pricingService = new PricingService(DbFactory.CreateDbContext(), settings);
             await LoadSites();
             isLoading = false;
         }
@@ -191,6 +197,7 @@ namespace AztecTariff.Pages
 
                 foundItem.TariffName = EditSA.TariffName;
                 foundItem.FooterMessage = EditSA.FooterMessage;
+                foundItem.HeaderMessage = EditSA.HeaderMessage;
 
                 await saService.UpdateSalesArea(foundItem);
                 await Task.Delay(1);
@@ -201,7 +208,7 @@ namespace AztecTariff.Pages
 
 
                 await LoadSites();
-                UpdateAllSelected();
+                //UpdateAllSelected();
                 SelectedSalesArea = Sites.Select(s => s.SalesAreas.Where(sa => sa.SalesAreaId == SelectedSalesArea.SalesAreaId).First()).First();
 
                 await UpdatePDF();
@@ -401,12 +408,24 @@ namespace AztecTariff.Pages
         }
         #endregion
 
+        public static void SaveToXml(FullSalesArea obj, string filename)
+        {
+            XmlSerializer serializer = new XmlSerializer(typeof(FullSalesArea));
+
+            using (FileStream fileStream = new FileStream(filename, FileMode.Create))
+            {
+                serializer.Serialize(fileStream, obj);
+            }
+
+            Console.WriteLine($"Object saved to {filename}");
+        }
+
         #region PDF
         async Task UpdatePDF()
         {
             if (SelectedSalesArea.Categories.Sum(x => x.LinesRequired) < 5) return;
 
-
+            
 
             docname = await pDFMaker.MakePdf(SelectedSalesArea, selectedTemplate, includeAbv);
             if (string.IsNullOrWhiteSpace(docname)) return;

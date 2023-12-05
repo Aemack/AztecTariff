@@ -6,7 +6,10 @@
 @using Microsoft.EntityFrameworkCore;
 @using Telerik.FontIcons;
 @inject IDbContextFactory<ApplicationDBContext> DbFactory
+@inject Settings settings
+@inject NavigationManager nav
 @inherits BasePageClass
+
 
 @if (isLoading)
 {

@@ -225,7 +225,8 @@ main {
 
  /*Login background anim*/
 .cubic-background {
-    background-color: rgb(139,205,203);
+    
+    background-color: rgba(139,205,203, 0.5);
     position: relative;
     height: 100vh;
     overflow: hidden;
@@ -368,4 +369,9 @@ main {
     background: rgba(var(--bs-primary-rgb));
     color: white;
     cursor:pointer;
+}
+
+.link-unstyled, .link-unstyled:link, .link-unstyled:hover {
+    color: inherit;
+    text-decoration: inherit;
 }

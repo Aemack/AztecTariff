@@ -2,6 +2,7 @@
 using AztecTariff.Services;
 using AztecTariff.Shared;
 using Microsoft.AspNetCore.Components;
+using OpenXmlPowerTools;
 using Telerik.Blazor.Components;
 
 namespace AztecTariff.Pages
@@ -31,9 +32,13 @@ namespace AztecTariff.Pages
 
         protected override async Task OnInitializedAsync()
         {
+            if (!settings.IsLoggedIn)
+            {
+                nav.NavigateTo("/");
+            }
             isLoading = true;
-            productService = new ProductService(DbFactory.CreateDbContext());
-            categoryService = new CategoryService(DbFactory.CreateDbContext());
+            productService = new ProductService(DbFactory.CreateDbContext(), settings);
+            categoryService = new CategoryService(DbFactory.CreateDbContext(), settings);
             await Task.Delay(1);
             await LoadCategories();
             isLoading = false;
