@@ -179,7 +179,7 @@ namespace AztecTariff.Pages
             isLoading = true;
             await Task.Delay(1);
             SelectedSalesArea = salesArea;
-            UpdateAllSelected();
+            //UpdateAllSelected();
             await UpdatePDF();
             isLoading = false;
             await Task.Delay(1);
@@ -294,7 +294,7 @@ namespace AztecTariff.Pages
 
             SelectedSalesArea = newEvent;
             await LoadSites();
-            UpdateAllSelected();
+            //UpdateAllSelected();
             await UpdatePDF();
 
             isLoading = false;
