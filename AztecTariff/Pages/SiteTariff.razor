@@ -286,6 +286,11 @@
             </TelerikStackLayout>
 
             <TelerikStackLayout Orientation="StackLayoutOrientation.Horizontal">
+                <label>Event Header Message</label>
+                <InputText @bind-Value="eventSAModel.HeaderMessage" />
+            </TelerikStackLayout>
+
+            <TelerikStackLayout Orientation="StackLayoutOrientation.Horizontal">
                 <label>Event Footer Message</label>
                 <InputText @bind-Value="eventSAModel.FooterMessage" />
             </TelerikStackLayout>

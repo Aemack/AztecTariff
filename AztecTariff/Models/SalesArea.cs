@@ -10,8 +10,8 @@
         public bool Deleted { get; set; }
         public bool Included { get; set; }
         public string TariffName { get; set; }
-        public string FooterMessage { get; set; }
-        public string HeaderMessage { get; set; }
+        public string? FooterMessage { get; set; }
+        public string? HeaderMessage { get; set; }
         public bool isEvent { get; set; }
         public int? OriginalSalesAreaId { get; set; }
     }
