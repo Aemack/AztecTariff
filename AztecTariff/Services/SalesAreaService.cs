@@ -2,7 +2,10 @@
 using AztecTariff.Models;
 using CsvHelper;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.VisualBasic;
+using RestSharp;
 using System.Globalization;
+using System.Text.Json;
 
 namespace AztecTariff.Services
 {
@@ -23,17 +26,28 @@ namespace AztecTariff.Services
 
         public async Task PopulateSalesAreaTable()
         {
+            //Change to API Call 
             _dbContext.SalesAreas.RemoveRange(_dbContext.SalesAreas);
             await _dbContext.SaveChangesAsync();
 
-            var sites = new List<SalesArea>();
-            using (var reader = new StreamReader(Path.Combine(_settings.CSVFileLocation, "CSVs/Sites.csv")))
-            using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
-            {
-                sites = csv.GetRecords<SalesArea>().ToList();
-            }
 
-            await AddSalesAreas(sites);
+            var options = new RestClientOptions(_settings.APIBaseAddress)
+            {
+                
+                MaxTimeout = -1,
+            };
+            var client = new RestClient(options);
+            var request = new RestRequest($"api/SalesArea", Method.Get);
+            RestResponse response = await client.ExecuteAsync(request);
+            var json = response.Content;
+            JsonSerializerOptions jsoptions = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            };
+            List<SalesArea> salesAreas = JsonSerializer.Deserialize<List<SalesArea>>(json,jsoptions);
+
+
+            await AddSalesAreas(salesAreas);
         }
 
         public async Task AddSalesAreas(List<SalesArea> sites)
@@ -89,6 +103,8 @@ namespace AztecTariff.Services
                     FooterMessage = sa.FooterMessage,
                     HeaderMessage = sa.HeaderMessage
                 };
+
+
                 fsa.Events = await GetEventBySalesArea(sa.SalesAreaId);
                 fsa.Categories = await _categoryService.GetSalesAreaCategories(sa.SalesAreaId);
 

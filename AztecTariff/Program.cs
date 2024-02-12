@@ -23,6 +23,8 @@ builder.Services.AddScoped<ProductService>();
 builder.Services.AddScoped<CategoryService>();
 builder.Services.AddScoped<PricingService>();
 builder.Services.AddScoped<SalesAreaService>();
+builder.Services.AddScoped<PDFDataService>();
+builder.Services.AddScoped<HttpClient>();
 
 var app = builder.Build();
 

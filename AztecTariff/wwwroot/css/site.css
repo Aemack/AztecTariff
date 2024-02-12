@@ -223,9 +223,8 @@ main {
 @import url("https://fonts.googleapis.com/css?family=Montserrat:700");
 
 
- /*Login background anim*/
+/*Login background anim*/
 .cubic-background {
-    
     background-color: rgba(139,205,203, 0.5);
     position: relative;
     height: 100vh;
@@ -242,6 +241,7 @@ main {
     font-size: 50px;
     z-index: 1;
 }
+
 .cube {
     position: absolute;
     top: 80vh;
@@ -324,8 +324,7 @@ main {
     box-shadow: rgba(0, 0, 0, 0.25) 0px 54px 55px, rgba(0, 0, 0, 0.12) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px, rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px;
 }
 
-.settings-label{
-
+.settings-label {
 }
 
 
@@ -368,10 +367,61 @@ main {
 .eventrow {
     background: rgba(var(--bs-primary-rgb));
     color: white;
-    cursor:pointer;
+    cursor: pointer;
 }
 
 .link-unstyled, .link-unstyled:link, .link-unstyled:hover {
     color: inherit;
     text-decoration: inherit;
+}
+
+
+@keyframes fopen {
+    0% {
+        width: 10px;
+    }
+
+    100% {
+        width: 100%;
+    }
+}
+
+/*Grid Pinner*/
+@keyframes close {
+    0% {
+        width: 100%;
+    }
+
+    100% {
+        width: 0px;
+    }
+}
+
+
+.grid-col-collapsed {
+    width: 0px;
+    animation-name: close;
+    animation-duration: 0.5s;
+    margin: 0;
+    padding: 0;
+}
+
+.grid-col {
+    width: 100%;
+    flex: 1 0 0%;
+    margin:0;
+    padding:0;
+    animation-name: fopen;
+    animation-duration: 0.5s;
+}
+
+.overlay-button-1 {
+    z-index: 10;
+    background: rgba(var(--bs-primary-rgb));
+    color: white;
+}
+
+.grid-container {
+    display: grid;
+    grid-template-columns: auto auto auto;
 }

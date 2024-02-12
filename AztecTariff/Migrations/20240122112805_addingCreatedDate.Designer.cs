@@ -3,6 +3,7 @@ using System;
 using AztecTariff.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AztecTariff.Migrations
 {
     [DbContext(typeof(ApplicationDBContext))]
-    partial class ApplicationDBContextModelSnapshot : ModelSnapshot
+    [Migration("20240122112805_addingCreatedDate")]
+    partial class addingCreatedDate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "7.0.5");
@@ -189,37 +192,6 @@ namespace AztecTariff.Migrations
                     b.HasKey("SalesAreaId");
 
                     b.ToTable("SalesAreas");
-                });
-
-            modelBuilder.Entity("AztecTariff.Models.SummarizedCategory", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Category")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("CategoryId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<decimal>("MaxPrice")
-                        .HasColumnType("TEXT");
-
-                    b.Property<decimal>("MinPrice")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("SalesAreaID")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("SummaryDescription")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("SummarizedCategories");
                 });
 #pragma warning restore 612, 618
         }

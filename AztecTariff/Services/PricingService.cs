@@ -2,7 +2,9 @@
 using AztecTariff.Models;
 using CsvHelper;
 using Microsoft.EntityFrameworkCore;
+using RestSharp;
 using System.Globalization;
+using System.Text.Json;
 
 namespace AztecTariff.Services
 {
@@ -69,12 +71,19 @@ namespace AztecTariff.Services
             _dbContext.Pricing.RemoveRange(_dbContext.Pricing);
             await _dbContext.SaveChangesAsync();
 
-            var pricings = new List<Pricing>();
-            using (var reader = new StreamReader(Path.Combine(_settings.CSVFileLocation, "CSVs/Pricings.csv")))
-            using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+            var options = new RestClientOptions(_settings.APIBaseAddress)
             {
-                pricings = csv.GetRecords<Pricing>().ToList();
-            }
+                MaxTimeout = -1,
+            };
+            var client = new RestClient(options);
+            var request = new RestRequest($"api/Pricings", Method.Get);
+            RestResponse response = await client.ExecuteAsync(request);
+
+            JsonSerializerOptions jsoptions = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            };
+            var pricings = JsonSerializer.Deserialize<List<Pricing>>(response.Content, jsoptions);
 
             foreach (var pricing in pricings)
             {

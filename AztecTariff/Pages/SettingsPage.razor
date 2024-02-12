@@ -1,9 +1,15 @@
 ﻿@page "/Settings"
 @using AztecTariff.Models;
 @using System.Xml.Serialization;
+@using AztecTariff.Services;
 @using Telerik.FontIcons;
+@using AztecTariff.Shared
+
 @inject Settings settings
 @inject NavigationManager nav
+@inject SalesAreaService saService
+@inject PricingService pricingService
+@inject ProductService productService
 
 
 @if (isLoading)
@@ -16,7 +22,10 @@
 </div>
 
 <div class="position-absolute bottom-0 end-0">
+    
     <Toast @ref="Toast"></Toast>
+    
+    
 </div>
 
 <div class="p-2 h-100 d-flex justify-content-center align-items-center">
@@ -67,7 +76,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="w-100">
+                <div class="w-50">
                     <div class="my-3 mx-2 w-90 p-2 border border-primary" style="border-radius:3px;">
                         <div class="row my-2">
                             <div class="col">
@@ -80,6 +89,23 @@
                             </div>
                             <div class="col">
                                 <TelerikTextBox />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="w-50">
+                    <div class="my-3 mx-2 w-90 p-2 border border-primary" style="border-radius:3px;">
+                        <div class="row my-2">
+                            <div class="col">
+                                <div class="subheading">API Settings</div>
+                            </div>
+                        </div>
+                        <div class="row my-2">
+                            <div class="col">
+                                <p class="settings-label">API Base Address:</p>
+                            </div>
+                            <div class="col">
+                                <TelerikTextBox @bind-Value="@settings.APIBaseAddress" />
                             </div>
                         </div>
                     </div>
@@ -105,19 +131,21 @@
                 {
                     serializer.Serialize(writer, settings);
                 }
-                
+
 
                 Console.WriteLine($"Settings saved to {"settings.xml"}");
                 nav.NavigateTo("/Settings");
 
+                await RepopulateDatabase();
                 await Toast.DisplayMessage("Saved Settings", "bg-green");
+
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error saving settings: {ex.Message}");
                 nav.NavigateTo("/Settings");
                 await Toast.DisplayMessage("Failed To Save Settings", "bg-red");
-                
+
             }
         }
         else
@@ -126,5 +154,15 @@
             nav.NavigateTo("/Settings");
             await Toast.DisplayMessage("Invalid Settings", "bg-red");
         }
+
+    }
+
+    async Task RepopulateDatabase()
+    {
+        await saService.PopulateSalesAreaTable();
+        await productService.PopulateProductsTable();
+        await pricingService.PopulatePricingsTable();
     }
 }
+
+

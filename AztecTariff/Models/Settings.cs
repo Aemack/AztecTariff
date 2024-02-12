@@ -9,10 +9,11 @@ namespace AztecTariff.Models
         public string CSVFileLocation { get; set; }
         public string WordFileLocation { get; set; }
         public string LibreLocation { get; set; }
+        public string APIBaseAddress { get; set; }
 
         public bool IsValid()
         {
-            if (string.IsNullOrWhiteSpace(TemplateFolderLocation) || string.IsNullOrWhiteSpace(LibreLocation) || string.IsNullOrWhiteSpace(WordFileLocation) || string.IsNullOrWhiteSpace(CSVFileLocation))
+            if (string.IsNullOrWhiteSpace(TemplateFolderLocation) || string.IsNullOrWhiteSpace(LibreLocation) || string.IsNullOrWhiteSpace(WordFileLocation) || string.IsNullOrWhiteSpace(CSVFileLocation) || string.IsNullOrWhiteSpace(APIBaseAddress))
             {
                 return false;
             } else if (!Directory.Exists(TemplateFolderLocation) || !Directory.Exists(CSVFileLocation) || !System.IO.File.Exists(WordFileLocation) || !System.IO.File.Exists(LibreLocation))

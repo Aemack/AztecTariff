@@ -1,6 +1,6 @@
 ﻿@using AztecTariff.Models;
 @inject Settings settings
-@inject NavigationManager nav 
+@inject NavigationManager nav
 <div class="top-row navbar m-auto">
     <div class="container-fluid overflow-hidden">
         <a class="navbar-brand m-auto" href="SiteTariff"><img src="images/zonallogo.png" width="90" height="27" class="d-inline-block align-top" alt="zonal logo" /></a>
@@ -10,7 +10,7 @@
     </div>
 </div>
 
-<div style="height:95%" >
+<div style="height:95%;" >
     <nav class="d-flex flex-column h-100">
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="SiteTariff" Match="NavLinkMatch.All">
@@ -28,7 +28,7 @@
             </NavLink>
         </div>
         <div class="nav-item mt-auto px-3" style="cursor:pointer" @onclick="LogOut">
-            <a class="nav-link" >
+            <a class="nav-link">
                 <span class="oi oi-x" aria-hidden="true"></span> Logout
             </a>
         </div>

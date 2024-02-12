@@ -5,4 +5,5 @@
   <CSVFileLocation>C:\Users\AdamM2\OneDrive - Zonal Retail Data Systems Limited\Desktop\TariffNotesNStuff\New folder</CSVFileLocation>
   <WordFileLocation>C:\Users\AdamM2\OneDrive - Zonal Retail Data Systems Limited\Desktop\TariffNotesNStuff\New folder\Test.docx</WordFileLocation>
   <LibreLocation>C:\Users\AdamM2\Downloads\LibreOfficePortable\LibreOfficePortable.exe</LibreLocation>
+  <APIBaseAddress>https://localhost:7268</APIBaseAddress>
 </Settings>

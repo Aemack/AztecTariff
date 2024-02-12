@@ -2,7 +2,9 @@
 using AztecTariff.Models;
 using CsvHelper;
 using Microsoft.EntityFrameworkCore;
+using RestSharp;
 using System.Globalization;
+using System.Text.Json;
 
 namespace AztecTariff.Services
 {
@@ -25,12 +27,19 @@ namespace AztecTariff.Services
             _dbContext.Products.RemoveRange(_dbContext.Products);
             await _dbContext.SaveChangesAsync();
 
-            var products = new List<Product>();
-            using (var reader = new StreamReader(Path.Combine(_settings.CSVFileLocation, "CSVs/DrinkList.csv")))
-            using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+            var options = new RestClientOptions(_settings.APIBaseAddress)
             {
-                products = csv.GetRecords<Product>().ToList();
-            }
+                MaxTimeout = -1,
+            };
+            var client = new RestClient(options);
+            var request = new RestRequest($"api/Products", Method.Get);
+            RestResponse response = await client.ExecuteAsync(request);
+
+            JsonSerializerOptions jsoptions = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            };
+            List<Product> products = JsonSerializer.Deserialize<List<Product>>(response.Content, jsoptions);
 
             foreach (var product in products)
             {

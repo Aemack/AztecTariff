@@ -15,6 +15,9 @@ namespace AztecTariff.Data
         public DbSet<Product> Products { get; set; }
         public DbSet<Pricing> Pricing { get; set; }
         public DbSet<SalesArea> SalesAreas { get; set; }
+        public DbSet<PDFData> PDFData { get; set; }
+        public DbSet<PDFProduct> PDFProducts { get; set; }
+        public DbSet<SummarizedCategory> SummarizedCategories { get; set; }
 
     }
 }

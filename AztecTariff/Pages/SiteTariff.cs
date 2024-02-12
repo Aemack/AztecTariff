@@ -6,6 +6,10 @@ using Telerik.Blazor.Components;
 using Telerik.Blazor;
 using System.Diagnostics.Contracts;
 using System.Xml.Serialization;
+using Microsoft.JSInterop;
+using System.IO.Compression;
+using System.IO;
+using Microsoft.AspNetCore.Hosting;
 
 namespace AztecTariff.Pages
 {
@@ -25,19 +29,34 @@ namespace AztecTariff.Pages
         FullSite SelectedSite = new FullSite();
         FullSalesArea SelectedSalesArea = new FullSalesArea();
         PDFMakerService pDFMaker;
-        PricingService pricingService;
+
 
         SalesArea eventSAModel;
         FullEvent eventModel;
 
+        SummarizedCategory summaryModel;
         List<string> templateChoices = new List<string>() { "Single-Page", "Multi-Page", "Landscape Multi-Page" };
         List<FullSite> Sites = new List<FullSite>();
         List<FullCategory> SelectedCategories = new List<FullCategory>();
         List<FullSite> SelectedSites = new List<FullSite>();
 
-        CategoryService categoryService;
-        SalesAreaService saService;
+        List<FullPDFData> ExportableSalesAreas = new List<FullPDFData>();
+        List<FullPDFData> SelectedSalesAreas = new List<FullPDFData>();
 
+
+
+        bool sitesCollapsed;
+        bool categoriesCollapsed;
+        bool isAddSummaryModalVisible;
+        string gridClass => (sitesCollapsed && categoriesCollapsed) ? "row p-0 " : "row p-0 grid-container";
+        string siteTableClass => (sitesCollapsed) ? "grid-col-collapsed" : "grid-col";
+        //string siteTableClass => (sitesCollapsed) ? "grid-col-collapsed p-0" : "grid-col col p-0";
+        string categoryTableClass => (categoriesCollapsed) ? "grid-col-collapsed" : "grid-col";
+        //string categoryTableClass => (categoriesCollapsed) ? "grid-col-collapsed p-0" : "grid-col col p-0";
+        string sitesButtonClass => (sitesCollapsed) ? "btn overlay-button-1" : "d-none";
+        string categoryButtonClass => (categoriesCollapsed) ? "btn overlay-button-1" : "d-none";
+
+        CategoryService catService;
         byte[] PdfSource;
         string selectedTemplate;
         string docname;
@@ -46,11 +65,16 @@ namespace AztecTariff.Pages
         bool includeAbv;
         bool isLoading;
         bool isAddEventModalVisible;
+        bool isMultiExportVisible;
+        bool isMultiPrintVisible;
         bool isDeleteEventModalVisible;
         decimal basePriceMultiplier;
         #endregion
+
+
         protected override async Task OnInitializedAsync()
         {
+            catService = new CategoryService(DbFactory.CreateDbContext(), settings);
             if (!settings.IsLoggedIn)
             {
                 nav.NavigateTo("/");
@@ -59,11 +83,16 @@ namespace AztecTariff.Pages
             isLoading = true;
             selectedTemplate = templateChoices[0];
             saService = new SalesAreaService(DbFactory.CreateDbContext(), settings);
-            categoryService = new CategoryService(DbFactory.CreateDbContext(), settings);
             await Task.Delay(1);
             pDFMaker = new PDFMakerService(settings);
-            pricingService = new PricingService(DbFactory.CreateDbContext(), settings);
+
             await LoadSites();
+            if (Sites.Count > 0 && Sites[0].SalesAreas.Count > 0)
+            {
+                SelectedSalesArea = Sites.FirstOrDefault().SalesAreas.FirstOrDefault();
+            }
+            UpdateAllSelected();
+            
             isLoading = false;
         }
 
@@ -107,6 +136,10 @@ namespace AztecTariff.Pages
 
         void UpdateAllSelected()
         {
+            if (SelectedSalesArea.TariffName == null)
+            {
+                return;
+            }
             foreach (var cat in SelectedSalesArea.Categories)
             {
                 if (cat.IncludedInPDFProducts.Count == cat.IncludedProducts.Count)
@@ -133,6 +166,56 @@ namespace AztecTariff.Pages
             await UpdatePDF();
             isLoading = false;
             await Task.Delay(1);
+        }
+
+
+        public async void SummarizeCategoryToggle(FullCategory category)
+        {
+            if (category.IsSummarized)
+            {
+                isLoading = true;
+                isAddSummaryModalVisible = false;
+                category.SummarizedCategory = null;
+                await catService.DeleteSummarizedCategory(category, SelectedSalesArea.SalesAreaId);
+                await UpdatePDF();
+                isLoading = false;
+                return;
+            }
+
+
+            summaryModel = new SummarizedCategory();
+            summaryModel.Category = category.TariffCategory;
+            summaryModel.SummaryDescription = "Prices range from";
+            summaryModel.SalesAreaID = SelectedSalesArea.SalesAreaId;
+            summaryModel.MinPrice = category.IncludedProducts.Select(p => p.Price).Min();
+            summaryModel.MaxPrice = category.IncludedProducts.Select(p => p.Price).Max();
+            
+
+            isAddSummaryModalVisible = true;
+        }
+
+        async void SaveCategorySummary()
+        {
+            isLoading = true;
+            isAddSummaryModalVisible = false;
+            await Task.Delay(1);
+
+            summaryModel.CategoryId = catService.GetCategoryId(summaryModel.Category);
+            await catService.UpdateSummarizedCategory(summaryModel);
+            
+            var x = SelectedSalesArea.Categories.Where(x => x.TariffCategory == summaryModel.Category).FirstOrDefault();
+            if(x != null)
+            {
+                x.SummarizedCategory = summaryModel;
+            }
+            
+            await UpdatePDF();
+
+            isLoading = false;
+            await Task.Delay(1);
+            StateHasChanged();
+
+
         }
         #endregion
 
@@ -179,7 +262,7 @@ namespace AztecTariff.Pages
             isLoading = true;
             await Task.Delay(1);
             SelectedSalesArea = salesArea;
-            //UpdateAllSelected();
+            UpdateAllSelected();
             await UpdatePDF();
             isLoading = false;
             await Task.Delay(1);
@@ -273,7 +356,7 @@ namespace AztecTariff.Pages
             int newSaId = await saService.AddSalesArea(eventSAModel);
             //Make new pricing records for all the products
             var products = pricingService.GetPricingBySA(sa.OriginalSalesAreaId);
-            foreach(var p in products)
+            foreach (var p in products)
             {
                 await pricingService.AddPricing(new Pricing()
                 {
@@ -285,7 +368,7 @@ namespace AztecTariff.Pages
             }
             var allSAs = Sites.SelectMany(x => x.SalesAreas).ToList();
             var selectedSA = allSAs.Where(y => y.SalesAreaId == eventSAModel.OriginalSalesAreaId).First();
-            
+
 
             var createdEvent = await saService.GetSalesArea(newSaId);
             var newEvent = await saService.ToFullEvent(createdEvent);
@@ -304,7 +387,7 @@ namespace AztecTariff.Pages
         void RemoveEventPricing(FullEvent fe)
         {
             eventModel = fe;
-            isDeleteEventModalVisible = true;   
+            isDeleteEventModalVisible = true;
         }
 
         async Task ConfirmRemoveEventPricing(FullSalesArea fe)
@@ -322,6 +405,61 @@ namespace AztecTariff.Pages
             isDeleteEventModalVisible = false;
             isAddEventModalVisible = false;
         }
+
+        void MinimiseSites()
+        {
+            sitesCollapsed = !sitesCollapsed;
+        }
+
+        void MinimiseCategories()
+        {
+            categoriesCollapsed = !categoriesCollapsed;
+        }
+
+        async Task SavePDFData(string docname)
+        {
+            if (SelectedSalesArea.TariffName != null)
+            {
+                try
+                {
+                    var x = new PDFData();
+                    x.TempFileName = docname;
+                    x.SalesAreaID = SelectedSalesArea.SalesAreaId;
+                    x.IncludeABV = includeAbv;
+                    x.Template = selectedTemplate;
+                    x.CreatedDate = DateTime.Now;
+
+                    var pdfDataId = await pdfdataservice.UpdatePDFData(x);
+
+                    foreach (var y in SelectedSalesArea.Categories)
+                    {
+                        foreach (var c in y.IncludedProducts)
+                        {
+                            var pp = new PDFProduct()
+                            {
+                                ProductID = c.ProductId,
+                                DisplayName = c.ProductTariffName,
+                                PDFDataId = pdfDataId,
+                                IncludedInPdf = c.IncludeInPDF,
+                                Pricing = c.Price,
+                            };
+                            await pdfdataservice.UpdatePDFProduct(pp);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    await Console.Out.WriteLineAsync("Something went wrong!");
+                }
+            }
+        }
+
+        void GetPrintableSites()
+        {
+            ExportableSalesAreas = pdfdataservice.GetAllFullPDFData();
+
+        }
+
         #endregion
 
         #region Products
@@ -408,25 +546,10 @@ namespace AztecTariff.Pages
         }
         #endregion
 
-        public static void SaveToXml(FullSalesArea obj, string filename)
-        {
-            XmlSerializer serializer = new XmlSerializer(typeof(FullSalesArea));
-
-            using (FileStream fileStream = new FileStream(filename, FileMode.Create))
-            {
-                serializer.Serialize(fileStream, obj);
-            }
-
-            Console.WriteLine($"Object saved to {filename}");
-        }
-
         #region PDF
         async Task UpdatePDF()
         {
             if (SelectedSalesArea.Categories.Sum(x => x.LinesRequired) < 5) return;
-
-            
-
             docname = await pDFMaker.MakePdf(SelectedSalesArea, selectedTemplate, includeAbv);
             if (string.IsNullOrWhiteSpace(docname)) return;
             Byte[] fileBytes = File.ReadAllBytes(@$"{docname}");
@@ -437,13 +560,15 @@ namespace AztecTariff.Pages
             }
             PdfSource = Convert.FromBase64String(content);
             await Task.Delay(1);
+
+            await SavePDFData(docname);
+            isLoading = false;
         }
 
         async Task TemplateChanged()
         {
             isLoading = true;
             await Task.Delay(1);
-            Console.WriteLine(selectedTemplate);
             await UpdatePDF();
             isLoading = false;
             await Task.Delay(1);
@@ -459,9 +584,124 @@ namespace AztecTariff.Pages
             isLoading = false;
             await Task.Delay(1);
         }
+
+        async Task ExportMultipleClicked()
+        {
+            isMultiExportVisible = true;
+            GetAllPDFData();
+        }
+
+        async Task PrintMultipleClicked()
+        {
+            isMultiPrintVisible = true;
+            GetAllPDFData();
+        }
+
+        public void GetAllPDFData()
+        {
+            ExportableSalesAreas = pdfdataservice.GetAllFullPDFData();
+        }
+
+        public async Task ExportFromMultiple()
+        {
+            var x = ExportableSalesAreas.Where(x => x.Selected).ToList();
+            await CreateZipFile(x);
+        }
+
+        private async Task CreateZipFile(List<FullPDFData> x)
+        {
+            var filePaths = x.Select(x => x.PDFData.TempFileName).ToList();
+
+            using (var memoryStream = new MemoryStream())
+            {
+                using (var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
+                {
+                    foreach (var filePath in filePaths)
+                    {
+                        var entry = archive.CreateEntry(Path.GetFileName(filePath));
+
+                        using (var entryStream = entry.Open())
+                        using (var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read))
+                        {
+                            fileStream.CopyTo(entryStream);
+                        }
+                    }
+                }
+
+                // Reset the stream's position to the beginning
+                memoryStream.Seek(0, SeekOrigin.Begin);
+
+                var mimeType = "application/zip";
+                var fileName = "YourArchive.zip";
+
+                var buffer = new byte[memoryStream.Length];
+                await memoryStream.ReadAsync(buffer, 0, buffer.Length);
+
+                var base64 = Convert.ToBase64String(buffer);
+                var href = $"data:{mimeType};base64,{base64}";
+
+                // Use NavigationManager to navigate to the dynamically generated data URL
+                nav.NavigateTo(href, forceLoad: true);
+            }
+
+
+        }
+
+        public async Task DownloadFiles(List<FullPDFData> x)
+        {
+            var fileUrls = new List<string>();
+            foreach (var file in x)
+            {
+                fileUrls.Add(file.PDFData.TempFileName);
+            }
+
+
+            await JSRuntime.InvokeVoidAsync("downloadFiles", fileUrls);
+        }
+
+        public async Task PrintMultiplePDF()
+        {
+            var x = ExportableSalesAreas.Where(x => x.Selected).ToList();
+
+            var filePaths = x.Select(x => x.PDFData.TempFileName).ToList();
+
+            foreach (var filePath in filePaths)
+            {
+
+                var pdfFileName = filePath.Split(@"\").Last();
+                //File.Copy(filePath, Path.Combine(WebHostEnvironment.ContentRootPath, "wwwroot", "temppdf", pdfFileName));
+
+                var fullPath = Path.Combine(WebHostEnvironment.ContentRootPath, "wwwroot", "temppdf", pdfFileName);
+
+
+                try
+                {
+                    var pdfContent = await File.ReadAllBytesAsync(filePath);
+                    var base64Pdf = Convert.ToBase64String(pdfContent);
+                    var pdfDataUri = $"data:application/pdf;base64,{base64Pdf}";
+                    await JSRuntime.InvokeVoidAsync("printPdf", pdfDataUri);
+                }
+                catch (Exception ex)
+                {
+                    // Log or handle any exceptions
+                    Console.WriteLine($"Error: {ex.Message}");
+                }
+            }
+            isMultiPrintVisible = false;
+        }
+
+
+        public static void SaveToXml(FullSalesArea obj, string filename)
+        {
+            XmlSerializer serializer = new XmlSerializer(typeof(FullSalesArea));
+
+            using (FileStream fileStream = new FileStream(filename, FileMode.Create))
+            {
+                serializer.Serialize(fileStream, obj);
+            }
+
+            Console.WriteLine($"Object saved to {filename}");
+        }
         #endregion
-
-
-
     }
 }

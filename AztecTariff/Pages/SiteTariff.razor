@@ -5,10 +5,17 @@
 @using Microsoft.EntityFrameworkCore;
 @using Telerik.FontIcons;
 
-@inject IDbContextFactory<ApplicationDBContext> DbFactory
 @inherits BasePageClass
+
+@inject IDbContextFactory<ApplicationDBContext> DbFactory
 @inject Settings settings
 @inject NavigationManager nav
+@inject PDFDataService pdfdataservice
+@inject SalesAreaService saService
+@inject PricingService pricingService
+@inject IJSRuntime JSRuntime
+@inject IWebHostEnvironment WebHostEnvironment
+@inject HttpClient HttpClient
 
 @if (isLoading)
 {
@@ -18,17 +25,28 @@
 <div class="container-fluid" style="height:100%">
     @*Toast*@
     <div class="position-absolute bottom-0 end-0">
-        <Toast @ref="Toast"></Toast>
+        @*<Toast @ref="Toast"></Toast>*@
     </div>
 
-    <div class="row p-0" style="height:100vh">
+    <div class="@gridClass" style="height:100vh">
+
+        @*GridTabs*@
+        <div class="position-absolute d-flex flex-column" style="top: 25%;left: 150px;width:12pc;">
+        <button class="@sitesButtonClass" style="border-radius:20px;" @onclick="@MinimiseSites">Sites</button>
+        <button class="@categoryButtonClass" style="border-radius:20px;" @onclick="@MinimiseCategories">Categories</button>
+        </div>
 
         @*List of Sites*@
-        <TelerikGrid class="col p-0" Data="@Sites" @ref="SiteGrid"
+        <TelerikGrid class="@siteTableClass" Data="@Sites" @ref="SiteGrid"
                      SelectionMode="GridSelectionMode.None"
                      Pageable="false"
-                     EditMode="GridEditMode.Popup"
-                     OnRowDrop="@((GridRowDropEventArgs<FullSite> args) => SiteMoved(args))">
+                     EditMode="GridEditMode.Popup">
+
+            <GridToolBarTemplate>
+                <button class="btn" @onclick="@MinimiseSites"><span class="oi oi-chevron-left" aria-hidden="true"></span></button>
+                <label>Sites</label>
+            </GridToolBarTemplate>
+
             <RowTemplate Context="site">
                 <td class="k-table-td row">
                     <div class="row p-2">
@@ -101,8 +119,8 @@
                                         <TelerikGrid Data="@b.Events" Context="tevent">
                                             <RowTemplate>
                                                 <Animate Animation=Animations.SlideDown>
-                                                    <div class="row w-100 eventrow"  >
-                                                        <div class="m-auto p-0 col" ></div>
+                                                    <div class="row w-100 eventrow">
+                                                        <div class="m-auto p-0 col"></div>
                                                         <div style="cursor:pointer;" class="m-auto p-0 col d-flex justify-content-center align-items-center" @onclick="@(() => EditSalesArea(tevent))">
                                                             <TelerikFontIcon class="m-auto" Icon="@FontIcon.Pencil"></TelerikFontIcon>
                                                         </div>
@@ -124,23 +142,27 @@
                     }
                 </td>
             </RowTemplate>
-            <GridColumns>
+            @*<GridColumns>
                 <GridColumn Field="Name" Title="Site" />
-            </GridColumns>
+            </GridColumns>*@
         </TelerikGrid>
 
-
-
         @*List by cats*@
-        <TelerikGrid class="col p-0" Data="SelectedSalesArea.Categories" @ref="CatGrid"
+        <TelerikGrid class="@categoryTableClass" Data="SelectedSalesArea.Categories" @ref="CatGrid"
                      SelectionMode="GridSelectionMode.None"
                      Pageable="false"
-                     RowDraggable="true"
+                     
                      OnRowDrop="@((GridRowDropEventArgs<FullCategory> args) => CategoryMoved(args))"
                      EditMode="@GridEditMode.Popup">
+
+            <GridToolBarTemplate>
+                <button class="btn" @onclick="@MinimiseCategories"><span class="oi oi-chevron-left" aria-hidden="true"></span></button>
+                <label>Categories</label>
+            </GridToolBarTemplate>
+
             <RowTemplate Context="category">
                 <td class="k-table-td row ">
-                    <div class="row p-2">
+                    <div class="row p-2 align-items-center">
                         @if (SelectedCategories.Contains(category))
                         {
                             <div class="col" style="cursor:pointer;" @onclick="@(() => CategoryChevronClicked(category))">
@@ -154,14 +176,27 @@
                             </div>
                         }
 
-                        <span class="col-10">@category.TariffCategory</span>
+                        <span class="col-7 m-auto">@category.TariffCategory</span>
+
                         @if (category.Products.Count != 0)
                         {
-                            <input class="col" @bind="@category.AllSelected" type="checkbox" style="height:15px;" @onclick="@(() => CategoryCheckboxClicked(category))" />
+                            <TelerikToggleButton @bind-Selected="@category.IsSummarized" Class="col-3 m-auto"
+                                                 Title="Summarize"
+                                                 
+                                                 OnClick="@(() => SummarizeCategoryToggle(category))">
+                                                 @(category.IsSummarized ? "Summarized" : "Summarize")
+                            </TelerikToggleButton>
+
+                            <input class="col m-auto" @bind="@category.AllSelected" type="checkbox" style="height:15px;" @onclick="@(() => CategoryCheckboxClicked(category))" />   
                         }
                         else
                         {
-                            <input class="col" @bind="@category.AllSelected" type="checkbox" style="height:15px;" disabled />
+                            <TelerikToggleButton Class="col-3 m-auto"
+                                                 Title="Summarize"
+                                                 Enabled=false>
+                                @(category.IsSummarized ? "Summarized" : "Summarize")
+                            </TelerikToggleButton>
+                            <input class="col m-auto" @bind="@category.AllSelected" type="checkbox" style="height:15px;" disabled />
                         }
                     </div>
                     @{
@@ -169,10 +204,6 @@
                     }
                     @if (SelectedCategories.Contains(category))
                     {
-                        //if empty, show empty message
-                        //Change to Telerikgrid to use built in Edit
-
-
                         <TelerikGrid class="col p-0 grid-no-scroll" Data="category.IncludedProducts" @ref="ProdGrid"
                                      SelectionMode="GridSelectionMode.None"
                                      Pageable="false"
@@ -231,9 +262,6 @@
                     }
                 </td>
             </RowTemplate>
-            <GridColumns>
-                <GridColumn Title="Categories" />
-            </GridColumns>
         </TelerikGrid>
 
 
@@ -243,14 +271,14 @@
                           Data="@PdfSource">
             <PdfViewerToolBar>
 
+
+
+
+                <PdfViewerToolBarSpacer />
                 <PdfViewerToolBarSeparator />
 
                 <PdfViewerToolBarDownloadTool />
                 <PdfViewerToolBarPrintTool />
-
-
-                <PdfViewerToolBarSpacer />
-
                 <PdfViewerToolBarZoomTool />
                 <PdfViewerToolBarSelectionTool />
                 <PdfViewerToolBarSearchTool />
@@ -262,8 +290,15 @@
 
                 <PdfViewerToolBarCustomTool>
                     <label>Template Options</label>
-                    <TelerikDropDownList OnChange="@TemplateChanged" Data="@templateChoices" @bind-Value="selectedTemplate">
+                    <TelerikDropDownList OnClose="@TemplateChanged" Data="@templateChoices" @bind-Value="selectedTemplate">
                     </TelerikDropDownList>
+                </PdfViewerToolBarCustomTool>
+
+                <PdfViewerToolBarCustomTool>
+                    <button class="btn" onclick="@ExportMultipleClicked">Export Mulitple</button>
+                </PdfViewerToolBarCustomTool>
+                <PdfViewerToolBarCustomTool>
+                    <button class="btn" onclick="@PrintMultipleClicked">Print Multiple</button>
                 </PdfViewerToolBarCustomTool>
 
             </PdfViewerToolBar>
@@ -309,6 +344,76 @@
     </WindowActions>
 </TelerikWindow>
 
+<TelerikWindow Modal="true"
+@bind-Visible="@isMultiExportVisible"
+               CloseOnOverlayClick="true">
+    <WindowTitle>
+        Select Sales Areas To Export
+    </WindowTitle>
+    <WindowContent>
+
+        <TelerikGrid Data="@ExportableSalesAreas" Context="context" SelectedItems="@SelectedSalesAreas" SelectionMode="GridSelectionMode.Multiple">
+
+
+            <RowTemplate>
+                @{
+                    var b = (FullPDFData)context;
+                    <div class="container">
+                        <div class="row">
+                            <label class="col-3">@b.SalesArea.TariffName</label>
+                            <label class="col-3">@b.SalesArea.SAName</label>
+                            <label class="col-3">@b.SalesArea.SiteName</label>
+                            <label class="col-2">@b.PDFData.CreatedDate.ToShortDateString()</label>
+
+                            <input type="checkbox" @bind=b.Selected class="col" />
+                        </div>
+                    </div>
+                }
+            </RowTemplate>
+
+        </TelerikGrid>
+        <button @onclick="@ExportFromMultiple">Export</button>
+    </WindowContent>
+    <WindowActions>
+        <WindowAction Name="Close" />
+    </WindowActions>
+</TelerikWindow>
+
+<TelerikWindow Modal="true"
+@bind-Visible="@isMultiPrintVisible"
+               CloseOnOverlayClick="true">
+    <WindowTitle>
+        Select Sales Areas To Export
+    </WindowTitle>
+    <WindowContent>
+
+        <TelerikGrid Data="@ExportableSalesAreas" Context="context" SelectedItems="@SelectedSalesAreas" SelectionMode="GridSelectionMode.Multiple">
+
+
+            <RowTemplate>
+                @{
+                    var b = (FullPDFData)context;
+                    <div class="container">
+                        <div class="row">
+                            <label class="col-3">@b.SalesArea.TariffName</label>
+                            <label class="col-3">@b.SalesArea.SAName</label>
+                            <label class="col-3">@b.SalesArea.SiteName</label>
+                            <label class="col-2">@b.PDFData.CreatedDate.ToShortDateString()</label>
+
+                            <input type="checkbox" @bind=b.Selected class="col" />
+                        </div>
+                    </div>
+                }
+            </RowTemplate>
+
+        </TelerikGrid>
+        <button @onclick="@PrintMultiplePDF">Print</button>
+    </WindowContent>
+    <WindowActions>
+        <WindowAction Name="Close" />
+    </WindowActions>
+</TelerikWindow>
+
 <TelerikWindow Modal="true" @bind-Visible="@isDeleteEventModalVisible" CloseOnOverlayClick="true">
     <WindowTitle>
         Remove Event
@@ -319,6 +424,44 @@
             <TelerikButton @onclick="@(() => ConfirmRemoveEventPricing(eventModel))">Delete</TelerikButton>
             <TelerikButton OnClick="CloseModal">Cancel</TelerikButton>
         </EditForm>
+    </WindowContent>
+    <WindowActions>
+        <WindowAction Name="Close" />
+    </WindowActions>
+</TelerikWindow>
+
+<TelerikWindow Modal="true"
+@bind-Visible="@isAddSummaryModalVisible"
+               CloseOnOverlayClick="true">
+    <WindowTitle>
+        Add Category Summary
+    </WindowTitle>
+    <WindowContent>
+
+        <EditForm Model="@summaryModel">
+            <div class="d-flex justify-content-center">
+            <label>@summaryModel.Category</label>
+            </div>
+
+            <TelerikStackLayout Orientation="StackLayoutOrientation.Horizontal">
+                <label>Max Price</label>
+                <InputNumber @bind-Value="summaryModel.MaxPrice" />
+            </TelerikStackLayout>
+
+            <TelerikStackLayout Orientation="StackLayoutOrientation.Horizontal">
+                <label>Min Price</label>
+                <InputNumber @bind-Value="summaryModel.MinPrice" />
+            </TelerikStackLayout>
+
+            <TelerikStackLayout Orientation="StackLayoutOrientation.Horizontal">
+                <label>Summary descrption</label>
+                <InputText @bind-Value="summaryModel.SummaryDescription" />
+            </TelerikStackLayout>
+
+
+            <TelerikButton OnClick="SaveCategorySummary">Add</TelerikButton>
+        </EditForm>
+
     </WindowContent>
     <WindowActions>
         <WindowAction Name="Close" />

@@ -51,7 +51,7 @@ namespace AztecTariff.Services
             includeABV = _includeABV;
             template = _template;  
             string docxPath = "";
-
+            string fileName = $"{DateTime.Now.ToString("mmhhddMMyyyy")}{pdfDocMod.TariffName}.pdf";
 
             switch (template)
             {
@@ -71,7 +71,7 @@ namespace AztecTariff.Services
                     break;
             }
 
-            return ConvertDocxToPDF(docxPath);
+            return ConvertDocxToPDF(docxPath, fileName);
         }
 
         public PDFMakerService(Models.Settings settings)
@@ -79,10 +79,10 @@ namespace AztecTariff.Services
             _settings = settings;
         }
 
-        private string ConvertDocxToPDF(string docxPath)
+        private string ConvertDocxToPDF(string docxPath, string filename)
         {
             var reportgen = new ReportGenerator(_settings.LibreLocation);
-            var outputpath = Path.Combine(_settings.CSVFileLocation, @$"tmpPdf.pdf");
+            var outputpath = Path.Combine(_settings.CSVFileLocation, filename);
             reportgen.Convert(docxPath, outputpath);
             return outputpath;
 
@@ -100,19 +100,19 @@ namespace AztecTariff.Services
             {
                 templateLocation = Path.Combine(_settings.TemplateFolderLocation, "TEMPLATE2.docx");
                 ColumnCount = 2;
-                columns = SplitByColumns(fullSalesArea.Categories, 2, 50);
+                columns = SplitByColumns(fullSalesArea.Categories, 2, 48);
             }
             else if (totalLinesRequired < 100)
             {
                 templateLocation = Path.Combine(_settings.TemplateFolderLocation, "TEMPLATE3.docx");
                 ColumnCount = 3;
-                columns = SplitByColumns(fullSalesArea.Categories, 3, 50);
+                columns = SplitByColumns(fullSalesArea.Categories, 3, 48);
             }
             else
             {
                 templateLocation = Path.Combine(_settings.TemplateFolderLocation, "TEMPLATE4.docx");
                 ColumnCount = 4;
-                columns = SplitByColumns(fullSalesArea.Categories, 4, 50);
+                columns = SplitByColumns(fullSalesArea.Categories, 4, 48);
             } 
 
 
@@ -149,6 +149,7 @@ namespace AztecTariff.Services
                     foreach (var category in columns[columnIterator])
                     {
                         if (!category.IncludedInPDFProducts.Any()) continue;
+                        
                         var categoryRow = columnTable.Elements<TableRow>().ElementAt(i);
                         var categoryCell1 = categoryRow.Elements<TableCell>().ElementAt(0);
                         var categoryCell2 = categoryRow.Elements<TableCell>().ElementAt(1);
@@ -179,36 +180,55 @@ namespace AztecTariff.Services
 
                         categoryCell1.Append(CategoryText(category.TariffCategory));
                         i++;
-                        foreach (var product in category.IncludedInPDFProducts)
+
+                        if (category.SummarizedCategory != null)
                         {
-                            try
+                            var tableRow = columnTable.Elements<TableRow>().ElementAt(i);
+                            var firstCell = tableRow.Elements<TableCell>().ElementAt(0);
+                            var secondCell = tableRow.Elements<TableCell>().ElementAt(1);
+                            var thirdCell = tableRow.Elements<TableCell>().ElementAt(2);
+
+
+                            firstCell.RemoveAllChildren();
+                            secondCell.RemoveAllChildren();
+                            thirdCell.RemoveAllChildren();
+
+                            firstCell.Append(StandardText($"{category.SummarizedCategory.SummaryDescription} £{category.SummarizedCategory.MinPrice} - £{category.SummarizedCategory.MaxPrice}"));
+                            i++;
+                        }
+                        else
+                        {
+                            foreach (var product in category.IncludedInPDFProducts)
                             {
-                                var tableRow = columnTable.Elements<TableRow>().ElementAt(i);
-                                var firstCell = tableRow.Elements<TableCell>().ElementAt(0);
-                                var secondCell = tableRow.Elements<TableCell>().ElementAt(1);
-                                var thirdCell = tableRow.Elements<TableCell>().ElementAt(2);
-
-
-                                firstCell.RemoveAllChildren();
-                                secondCell.RemoveAllChildren();
-                                thirdCell.RemoveAllChildren();
-
-                                firstCell.Append(StandardText(product.ProductTariffName));
-                                if (product.ABV == 0 || !includeABV)
+                                try
                                 {
-                                    secondCell.Append(StandardText($""));
-                                }
-                                else
-                                {
-                                    secondCell.Append(ItalicText($"{product.ABV.ToString()}%"));
-                                }
+                                    var tableRow = columnTable.Elements<TableRow>().ElementAt(i);
+                                    var firstCell = tableRow.Elements<TableCell>().ElementAt(0);
+                                    var secondCell = tableRow.Elements<TableCell>().ElementAt(1);
+                                    var thirdCell = tableRow.Elements<TableCell>().ElementAt(2);
 
-                                thirdCell.Append(StandardText($"£{product.Price.ToString("0.00")}"));
-                                i++;
-                            }
-                            catch
-                            {
-                                break;
+
+                                    firstCell.RemoveAllChildren();
+                                    secondCell.RemoveAllChildren();
+                                    thirdCell.RemoveAllChildren();
+
+                                    firstCell.Append(StandardText(product.ProductTariffName));
+                                    if (product.ABV == 0 || !includeABV)
+                                    {
+                                        secondCell.Append(StandardText($""));
+                                    }
+                                    else
+                                    {
+                                        secondCell.Append(ItalicText($"{product.ABV.ToString()}%"));
+                                    }
+
+                                    thirdCell.Append(StandardText($"£{product.Price.ToString("0.00")}"));
+                                    i++;
+                                }
+                                catch
+                                {
+                                    break;
+                                }
                             }
                         }
                     }
@@ -342,36 +362,54 @@ namespace AztecTariff.Services
 
                         categoryCell1.Append(CategoryText(category.TariffCategory));
                         i++;
-                        foreach (var product in category.IncludedInPDFProducts)
+
+                        if (category.SummarizedCategory != null)
                         {
-                            try
+                            var tableRow = columnTable.Elements<TableRow>().ElementAt(i);
+                            var firstCell = tableRow.Elements<TableCell>().ElementAt(0);
+                            var secondCell = tableRow.Elements<TableCell>().ElementAt(1);
+                            var thirdCell = tableRow.Elements<TableCell>().ElementAt(2);
+
+
+                            firstCell.RemoveAllChildren();
+                            secondCell.RemoveAllChildren();
+                            thirdCell.RemoveAllChildren();
+
+                            firstCell.Append(StandardText($"{category.SummarizedCategory.SummaryDescription} £{category.SummarizedCategory.MinPrice} - £{category.SummarizedCategory.MaxPrice}"));
+                        }
+                        else
+                        {
+                            foreach (var product in category.IncludedInPDFProducts)
                             {
-                                var tableRow = columnTable.Elements<TableRow>().ElementAt(i);
-                                var firstCell = tableRow.Elements<TableCell>().ElementAt(0);
-                                var secondCell = tableRow.Elements<TableCell>().ElementAt(1);
-                                var thirdCell = tableRow.Elements<TableCell>().ElementAt(2);
-
-
-                                firstCell.RemoveAllChildren();
-                                secondCell.RemoveAllChildren();
-                                thirdCell.RemoveAllChildren();
-
-                                firstCell.Append(StandardText(product.ProductTariffName));
-                                if (product.ABV == 0 || !includeABV)
+                                try
                                 {
-                                    secondCell.Append(StandardText($""));
-                                }
-                                else
-                                {
-                                    secondCell.Append(ItalicText($"{product.ABV.ToString()}%"));
-                                }
+                                    var tableRow = columnTable.Elements<TableRow>().ElementAt(i);
+                                    var firstCell = tableRow.Elements<TableCell>().ElementAt(0);
+                                    var secondCell = tableRow.Elements<TableCell>().ElementAt(1);
+                                    var thirdCell = tableRow.Elements<TableCell>().ElementAt(2);
 
-                                thirdCell.Append(StandardText($"£{product.Price.ToString("0.00")}"));
-                                i++;
-                            }
-                            catch
-                            {
-                                break;
+
+                                    firstCell.RemoveAllChildren();
+                                    secondCell.RemoveAllChildren();
+                                    thirdCell.RemoveAllChildren();
+
+                                    firstCell.Append(StandardText(product.ProductTariffName));
+                                    if (product.ABV == 0 || !includeABV)
+                                    {
+                                        secondCell.Append(StandardText($""));
+                                    }
+                                    else
+                                    {
+                                        secondCell.Append(ItalicText($"{product.ABV.ToString()}%"));
+                                    }
+
+                                    thirdCell.Append(StandardText($"£{product.Price.ToString("0.00")}"));
+                                    i++;
+                                }
+                                catch
+                                {
+                                    break;
+                                }
                             }
                         }
                     }

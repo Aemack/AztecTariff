@@ -1,6 +1,7 @@
 ﻿using AztecTariff.Data;
 using AztecTariff.Models;
 using CsvHelper;
+using DocumentFormat.OpenXml.Office2010.Excel;
 using Microsoft.EntityFrameworkCore;
 using System.Globalization;
 
@@ -11,6 +12,7 @@ namespace AztecTariff.Services
         private readonly ApplicationDBContext _dbContext;
         private readonly ProductService _productService;
         private readonly PricingService _pricingService;
+        
 
         public CategoryService(ApplicationDBContext dbContext, Settings settings)
         {
@@ -21,17 +23,24 @@ namespace AztecTariff.Services
         public async Task<List<FullCategory>> GetSalesAreaCategories(int salesAreaId)
         {
             var categories = _dbContext.Products.Select(p => p.CategoryId).ToList().Distinct();
+            var sumCats = await _dbContext.SummarizedCategories.Where(s => s.SalesAreaID == salesAreaId).ToListAsync();
+
             var fullcats = new List<FullCategory>();
             foreach (var category in categories)
             {
                 var cat = await _dbContext.Products.Where(p => p.CategoryId == category).FirstAsync();
                 var fc = new FullCategory();
-                fc.Products = await _productService.GetFullProductsByCategory(category, salesAreaId);
+                fc.Products = (await _productService.GetFullProductsByCategory(category, salesAreaId)).OrderBy(x => x.ProductTariffName).ToList();
                 fc.TariffCategory = cat.TariffCategory;
                 fc.CategoryName  = cat.CategoryName;
                 fc.Id = category;
+                fc.SummarizedCategory = sumCats.Where(x => x.CategoryId == category).FirstOrDefault();
+                fc.IsSummarized = (fc.SummarizedCategory != null);
+
                 fullcats.Add(fc);
             }
+
+
             return fullcats;
         }
 
@@ -64,6 +73,52 @@ namespace AztecTariff.Services
                     await _productService.UpdateProduct(p);
                 }
             }
+            await _dbContext.SaveChangesAsync();
+        }
+
+        public async Task<List<SummarizedCategory>> GetSitesSummarizedCategories(int salesAreaId)
+        {
+            return await _dbContext.SummarizedCategories.Where(x => x.SalesAreaID == salesAreaId).ToListAsync();
+        }
+
+        public async Task UpdateSummarizedCategory(SummarizedCategory sc)
+        {
+
+            var foundCat = await _dbContext.SummarizedCategories.Where(x => x.Id == sc.Id).FirstOrDefaultAsync();
+            if (foundCat != null)
+            {
+                foundCat.MinPrice = sc.MinPrice;
+                foundCat.MaxPrice = sc.MaxPrice;
+                foundCat.SummaryDescription = sc.SummaryDescription;
+                foundCat.Category = sc.Category;
+                foundCat.CategoryId = sc.CategoryId;
+                foundCat.SalesAreaID = sc.SalesAreaID;
+            } else
+            {
+                await _dbContext.AddAsync(sc);
+            }
+
+            await _dbContext.SaveChangesAsync();
+        }
+
+        public int GetCategoryId(string category)
+        {
+            return _dbContext.Products.Where(x => x.TariffCategory == category).First().CategoryId;
+        }
+
+        public async Task DeleteSummarizedCategory(FullCategory category, int id)
+        {
+            var foundEntry = await _dbContext.SummarizedCategories.Where(x => x.Id == id && x.Category == category.TariffCategory).FirstOrDefaultAsync();
+            if (foundEntry != null)
+            {
+                _dbContext.SummarizedCategories.Remove(foundEntry);
+                await _dbContext.SaveChangesAsync();
+            }
+        }
+
+        public async Task ClearSummarizedCategoriedTable()
+        {
+            _dbContext.SummarizedCategories.RemoveRange(_dbContext.SummarizedCategories);
             await _dbContext.SaveChangesAsync();
         }
     }   
