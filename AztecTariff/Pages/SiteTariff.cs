@@ -28,7 +28,7 @@ namespace AztecTariff.Pages
 
         FullSite SelectedSite = new FullSite();
         FullSalesArea SelectedSalesArea = new FullSalesArea();
-        PDFMakerService pDFMaker;
+        PDFMakerService pDFMaker;   
 
 
         SalesArea eventSAModel;
