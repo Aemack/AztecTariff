@@ -1,13 +1,16 @@
 ﻿using AztecTariff.Models;
 using AztecTariff.Services;
+using AztecTariffModels.Models;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
+using Microsoft.Extensions.Configuration;
 using System.Xml.Serialization;
 
 namespace AztecTariff.Pages
 {
     public partial class Index : BasePageClass
     {
+
         #region Props
         CategoryService categoryService;
         SalesAreaService siteService;
@@ -25,13 +28,6 @@ namespace AztecTariff.Pages
         #endregion
         protected override void OnInitialized()
         {
-            //settings.TemplateFolderLocation = "C:\Users\AdamM2\OneDrive - Zonal Retail Data Systems Limited\Desktop\TariffNotesNStuff\New folder";
-            //settings.CSVFileLocation = "C:\Users\AdamM2\OneDrive - Zonal Retail Data Systems Limited\Desktop\TariffNotesNStuff\New folder";
-            //settings.WordFileLocation = "C:\Users\AdamM2\OneDrive - Zonal Retail Data Systems Limited\Desktop\TariffNotesNStuff\New folder\Test.docx";
-            //settings.LibreLocation = @"C:\Users\AdamM2\Downloads\LibreOfficePortable\LibreOfficePortable.exe";
-
-
-
 
             usernameError = false;
             passwordError = false;
@@ -50,21 +46,18 @@ namespace AztecTariff.Pages
             if (s != null)
             {
                 settings.CSVFileLocation = s.CSVFileLocation;
-                settings.WordFileLocation = s.WordFileLocation;
-                settings.LibreLocation = s.LibreLocation;
-                settings.TemplateFolderLocation = s.TemplateFolderLocation;
                 settings.APIBaseAddress = s.APIBaseAddress;
+                settings.PDFOuputFilesLocation = s.PDFOuputFilesLocation;
             }
             settings.IsLoggedIn = LoginDetailsValid();
 
             if (settings.IsLoggedIn && settings.IsValid())
             {
-                categoryService = new CategoryService(DbFactory.CreateDbContext(), settings);
-                pricingService = new PricingService(DbFactory.CreateDbContext(), settings);
-                productService = new ProductService(DbFactory.CreateDbContext(), settings);
-                siteService = new SalesAreaService(DbFactory.CreateDbContext(), settings);
-                pDFDataService = new PDFDataService(DbFactory.CreateDbContext(), settings);
-                await RepopulateDatabase();
+                categoryService = new CategoryService(dbContext, settings);
+                pricingService = new PricingService(dbContext, settings);
+                productService = new ProductService(dbContext, settings);
+                siteService = new SalesAreaService(dbContext, settings);
+                pDFDataService = new PDFDataService(dbContext, settings);
                 nav.NavigateTo("/SiteTariff");
             }
             else if (!settings.IsValid())
@@ -92,22 +85,6 @@ namespace AztecTariff.Pages
                 Console.WriteLine($"Error loading settings: {ex.Message}");
                 return null;
             }
-        }
-
-        private async Task RepopulateDatabase()
-        {
-            var ds = new DrinkListCreatorService(settings);
-            var allProds = await productService.GetAllProducts();
-            //if (allProds.Count == 0)
-            //{
-            //ds.CreateCSVFiles();
-            await siteService.PopulateSalesAreaTable();
-            await productService.PopulateProductsTable();
-            await pricingService.PopulatePricingsTable();
-            await pDFDataService.ClearPDFDataTable();
-            await pDFDataService.ClearPDFProductTable();
-            await categoryService.ClearSummarizedCategoriedTable();
-            //}
         }
 
         public bool LoginDetailsValid()

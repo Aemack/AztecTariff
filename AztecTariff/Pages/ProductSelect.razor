@@ -1,13 +1,16 @@
 ﻿@page "/ProductSelect"
-@using AztecTariff.Data;
 @using AztecTariff.Models;
 @using AztecTariff.Services;
 @using AztecTariff.Shared;
+@using AztecTariffModels.Models;
 @using Microsoft.EntityFrameworkCore;
 @using Telerik.FontIcons;
-@inject IDbContextFactory<ApplicationDBContext> DbFactory
+
 @inject Settings settings
 @inject NavigationManager nav
+@inject TariffDatabaseContext dbContext
+@inject ProductService productService
+@inject CategoryService categoryService
 @inherits BasePageClass
 
 

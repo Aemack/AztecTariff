@@ -1,5 +1,5 @@
-﻿using AztecTariff.Data;
-using AztecTariff.Models;
+﻿using AztecTariff.Models;
+using AztecTariffModels.Models;
 using CsvHelper;
 using Microsoft.EntityFrameworkCore;
 using RestSharp;
@@ -10,45 +10,16 @@ namespace AztecTariff.Services
 {
     public class ProductService
     {
-        private readonly ApplicationDBContext _dbContext;
+        private readonly TariffDatabaseContext _dbContext;
         private PricingService _pricingService;
         Settings _settings;
-        public ProductService(ApplicationDBContext dbContext, Settings settings)
+        public ProductService(TariffDatabaseContext dbContext, Settings settings)
         {
             _settings = settings;
             _dbContext = dbContext;
             _pricingService = new PricingService(dbContext, settings);
 
         }
-
-
-        public async Task PopulateProductsTable()
-        {
-            _dbContext.Products.RemoveRange(_dbContext.Products);
-            await _dbContext.SaveChangesAsync();
-
-            var options = new RestClientOptions(_settings.APIBaseAddress)
-            {
-                MaxTimeout = -1,
-            };
-            var client = new RestClient(options);
-            var request = new RestRequest($"api/Products", Method.Get);
-            RestResponse response = await client.ExecuteAsync(request);
-
-            JsonSerializerOptions jsoptions = new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            };
-            List<Product> products = JsonSerializer.Deserialize<List<Product>>(response.Content, jsoptions);
-
-            foreach (var product in products)
-            {
-                _dbContext.Products.Add(product);    
-            }
-
-            await _dbContext.SaveChangesAsync();
-        }
-
 
 
         public async Task<List<Product>> GetAllProducts()
@@ -135,6 +106,31 @@ namespace AztecTariff.Services
                     Included = prod.Included,
                     Portion = prod.Portion,
                     Price = await _pricingService.GetProductPrice(prod.ProductId, salesAreaId),
+                    ProdName = prod.ProdName,
+                    ProductId = prod.ProductId,
+                    ProductTariffName = prod.ProductTariffName,
+                    IncludeInPDF = true,
+                };
+
+                fullProds.Add(fp);
+            }
+
+            return fullProds;
+        }
+        
+
+        public async Task<List<FullProduct>> GetFullProductsByCategoryByDate(int category, int salesAreaId, DateTime date)
+        {
+            var fullProds = new List<FullProduct>();
+            var prods = await _dbContext.Products.Where(p => p.CategoryId == category).ToListAsync();
+            foreach(var prod in prods)
+            {
+                var fp = new FullProduct()
+                {
+                    ABV = prod.ABV,
+                    Included = prod.Included,
+                    Portion = prod.Portion,
+                    Price = await _pricingService.GetProductPriceByDate(prod.ProductId, salesAreaId, date),
                     ProdName = prod.ProdName,
                     ProductId = prod.ProductId,
                     ProductTariffName = prod.ProductTariffName,

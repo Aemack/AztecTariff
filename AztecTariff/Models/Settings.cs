@@ -1,25 +1,18 @@
-﻿using Telerik.SvgIcons;
-
-namespace AztecTariff.Models
+﻿namespace AztecTariff.Models
 {
     public class Settings
     {
         public bool IsLoggedIn { get; set; }
-        public string TemplateFolderLocation { get; set; }
         public string CSVFileLocation { get; set; }
-        public string WordFileLocation { get; set; }
-        public string LibreLocation { get; set; }
         public string APIBaseAddress { get; set; }
-
+        public string PDFOuputFilesLocation { get; set; }
         public bool IsValid()
         {
-            if (string.IsNullOrWhiteSpace(TemplateFolderLocation) || string.IsNullOrWhiteSpace(LibreLocation) || string.IsNullOrWhiteSpace(WordFileLocation) || string.IsNullOrWhiteSpace(CSVFileLocation) || string.IsNullOrWhiteSpace(APIBaseAddress))
+            if (string.IsNullOrWhiteSpace(CSVFileLocation) ||string.IsNullOrWhiteSpace(PDFOuputFilesLocation) )
             {
                 return false;
-            } else if (!Directory.Exists(TemplateFolderLocation) || !Directory.Exists(CSVFileLocation) || !System.IO.File.Exists(WordFileLocation) || !System.IO.File.Exists(LibreLocation))
-            {
-                return false;
-            } else
+            }
+            else
             {
                 return true;
             }

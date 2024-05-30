@@ -9,20 +9,22 @@
     <PackageReference Include="Blazorise.Animate" Version="1.2.3" />
     <PackageReference Include="Blazorise.Bootstrap" Version="1.2.3" />
     <PackageReference Include="CsvHelper" Version="30.0.1" />
-    <PackageReference Include="DocXToPdfConverter" Version="1.0.5" />
     <PackageReference Include="GrapeCity.Documents.Html" Version="6.2.0" />
     <PackageReference Include="GrapeCity.Documents.Imaging" Version="6.2.0" />
+    <PackageReference Include="iTextSharp" Version="5.5.13.3" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.5" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="7.0.5">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="7.0.5" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="7.0.5" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="7.0.5">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="RestSharp" Version="110.2.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
     <PackageReference Include="Telerik.Documents.CMapUtils" Version="2023.1.410" />
     <PackageReference Include="Telerik.Documents.Core" Version="2023.1.410" />
     <PackageReference Include="Telerik.Documents.Fixed" Version="2023.1.410" />
@@ -37,5 +39,8 @@
     <Folder Include="Data\CSVs\" />
     <Folder Include="Pages\Components\" />
     <Folder Include="wwwroot\temppdf\" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\AztecTariffModels\AztecTariffModels\AztecTariffModels.csproj" />
   </ItemGroup>
 </Project>

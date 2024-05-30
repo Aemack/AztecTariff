@@ -2,6 +2,7 @@
 @using AztecTariff.Models;
 @using System.Xml.Serialization;
 @using AztecTariff.Services;
+@using AztecTariffModels.Models;
 @using Telerik.FontIcons;
 @using AztecTariff.Shared
 
@@ -22,10 +23,10 @@
 </div>
 
 <div class="position-absolute bottom-0 end-0">
-    
+
     <Toast @ref="Toast"></Toast>
-    
-    
+
+
 </div>
 
 <div class="p-2 h-100 d-flex justify-content-center align-items-center">
@@ -41,71 +42,38 @@
                             <div class="subheading">
                                 Folder Settings
                             </div>
-                        </div>
-                        <div class="row my-2">
-                            <div class="col">
-                                <p class="settings-label">Template Folder:</p>
+                            <div class="row my-2">
+                                <div class="col">
+                                    <label>CSV Location:</label>
+                                </div>
+                                <div class="col-9">
+                                    <TelerikTextBox @bind-Value="@settings.CSVFileLocation" />
+                                </div>
                             </div>
-                            <div class="col-9">
-                                <TelerikTextBox @bind-Value="@settings.TemplateFolderLocation" />
-                            </div>
-                        </div>
-                        <div class="row my-2">
-                            <div class="col">
-                                <p class="settings-label">Word File Location:</p>
-                            </div>
-                            <div class="col-9">
-                                <TelerikTextBox @bind-Value="@settings.WordFileLocation" />
-                            </div>
-                        </div>
-                        <div class="row my-2">
-                            <div class="col">
-                                <label>Libre Location:</label>
-                            </div>
-                            <div class="col-9">
-                                <TelerikTextBox @bind-Value="@settings.LibreLocation" />
-                            </div>
-                        </div>
-                        <div class="row my-2">
-                            <div class="col">
-                                <label>CSV Location:</label>
-                            </div>
-                            <div class="col-9">
-                                <TelerikTextBox @bind-Value="@settings.CSVFileLocation" />
+                            <div class="row my-2">
+                                <div class="col">
+                                    <label>Temporary PDF Location:</label>
+                                </div>
+                                <div class="col-9">
+                                    <TelerikTextBox @bind-Value="@settings.PDFOuputFilesLocation" />
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-                <div class="w-50">
-                    <div class="my-3 mx-2 w-90 p-2 border border-primary" style="border-radius:3px;">
-                        <div class="row my-2">
-                            <div class="col">
-                                <div class="subheading">PDF Settings</div>
+                    <div class="w-50">
+                        <div class="my-3 mx-2 w-90 p-2 border border-primary" style="border-radius:3px;">
+                            <div class="row my-2">
+                                <div class="col">
+                                    <div class="subheading">API Settings</div>
+                                </div>
                             </div>
-                        </div>
-                        <div class="row my-2">
-                            <div class="col">
-                                <p class="settings-label">Footer Message:</p>
-                            </div>
-                            <div class="col">
-                                <TelerikTextBox />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="w-50">
-                    <div class="my-3 mx-2 w-90 p-2 border border-primary" style="border-radius:3px;">
-                        <div class="row my-2">
-                            <div class="col">
-                                <div class="subheading">API Settings</div>
-                            </div>
-                        </div>
-                        <div class="row my-2">
-                            <div class="col">
-                                <p class="settings-label">API Base Address:</p>
-                            </div>
-                            <div class="col">
-                                <TelerikTextBox @bind-Value="@settings.APIBaseAddress" />
+                            <div class="row my-2">
+                                <div class="col">
+                                    <p class="settings-label">API Base Address:</p>
+                                </div>
+                                <div class="col">
+                                    <TelerikTextBox @bind-Value="@settings.APIBaseAddress" />
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -136,7 +104,7 @@
                 Console.WriteLine($"Settings saved to {"settings.xml"}");
                 nav.NavigateTo("/Settings");
 
-                await RepopulateDatabase();
+
                 await Toast.DisplayMessage("Saved Settings", "bg-green");
 
             }
@@ -157,12 +125,6 @@
 
     }
 
-    async Task RepopulateDatabase()
-    {
-        await saService.PopulateSalesAreaTable();
-        await productService.PopulateProductsTable();
-        await pricingService.PopulatePricingsTable();
-    }
 }
 
 

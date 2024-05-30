@@ -1,8 +1,8 @@
 ﻿using AztecTariff.Models;
 using AztecTariff.Services;
 using AztecTariff.Shared;
+using AztecTariffModels.Models;
 using Microsoft.AspNetCore.Components;
-using OpenXmlPowerTools;
 using Telerik.Blazor.Components;
 
 namespace AztecTariff.Pages
@@ -17,7 +17,6 @@ namespace AztecTariff.Pages
 
         List<FullCategory> Categories = new List<FullCategory>();
         List<FullCategory> OpenHeadings = new List<FullCategory>();
-        List<FullCategory> SelectedCategories = new List<FullCategory>();
         List<FullProduct> SelectedProducts = new List<FullProduct>();
         
         FullCategory SelectedCategory = new FullCategory();        
@@ -26,8 +25,6 @@ namespace AztecTariff.Pages
         bool AllSelected;
         bool isLoading;
 
-        ProductService productService;
-        CategoryService categoryService;
         #endregion
 
         protected override async Task OnInitializedAsync()
@@ -37,10 +34,8 @@ namespace AztecTariff.Pages
                 nav.NavigateTo("/");
             }
             isLoading = true;
-            productService = new ProductService(DbFactory.CreateDbContext(), settings);
-            categoryService = new CategoryService(DbFactory.CreateDbContext(), settings);
             await Task.Delay(1);
-            await LoadCategories();
+            await LoadCategories(); 
             isLoading = false;
             await Task.Delay(1);
         }

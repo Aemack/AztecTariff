@@ -1,14 +1,17 @@
 ﻿@page "/"
-@inject IDbContextFactory<ApplicationDBContext> DbFactory
-@inject Settings settings
+
 @inject NavigationManager nav
 @inject PDFDataService pDFDataService
-@using AztecTariff.Data;
+@inject Settings settings
+@inject TariffDatabaseContext dbContext
+@inherits BasePageClass
+
 @using AztecTariff.Models;
 @using AztecTariff.Services;
+@using AztecTariffModels.Models;
 @using Blazorise.Animate;
 @using Microsoft.EntityFrameworkCore;
-@inherits BasePageClass
+
 
 <PageTitle>Zonal - Login</PageTitle>
 

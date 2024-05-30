@@ -10,6 +10,7 @@ using Microsoft.JSInterop;
 using System.IO.Compression;
 using System.IO;
 using Microsoft.AspNetCore.Hosting;
+using AztecTariffModels.Models;
 
 namespace AztecTariff.Pages
 {
@@ -43,7 +44,7 @@ namespace AztecTariff.Pages
         List<FullPDFData> ExportableSalesAreas = new List<FullPDFData>();
         List<FullPDFData> SelectedSalesAreas = new List<FullPDFData>();
 
-
+        DateTime selectedDateValue = DateTime.Today;
 
         bool sitesCollapsed;
         bool categoriesCollapsed;
@@ -56,7 +57,6 @@ namespace AztecTariff.Pages
         string sitesButtonClass => (sitesCollapsed) ? "btn overlay-button-1" : "d-none";
         string categoryButtonClass => (categoriesCollapsed) ? "btn overlay-button-1" : "d-none";
 
-        CategoryService catService;
         byte[] PdfSource;
         string selectedTemplate;
         string docname;
@@ -68,13 +68,12 @@ namespace AztecTariff.Pages
         bool isMultiExportVisible;
         bool isMultiPrintVisible;
         bool isDeleteEventModalVisible;
-        decimal basePriceMultiplier;
+        double basePriceMultiplier;
         #endregion
 
 
         protected override async Task OnInitializedAsync()
         {
-            catService = new CategoryService(DbFactory.CreateDbContext(), settings);
             if (!settings.IsLoggedIn)
             {
                 nav.NavigateTo("/");
@@ -82,15 +81,15 @@ namespace AztecTariff.Pages
             }
             isLoading = true;
             selectedTemplate = templateChoices[0];
-            saService = new SalesAreaService(DbFactory.CreateDbContext(), settings);
             await Task.Delay(1);
             pDFMaker = new PDFMakerService(settings);
 
             await LoadSites();
-            if (Sites.Count > 0 && Sites[0].SalesAreas.Count > 0)
-            {
-                SelectedSalesArea = Sites.FirstOrDefault().SalesAreas.FirstOrDefault();
-            }
+            //if (Sites.Count > 0 && Sites[0].SalesAreas.Count > 0)
+            //{
+            //    SelectedSalesArea = Sites.FirstOrDefault().SalesAreas.FirstOrDefault();
+            //    SalesAreaSelected(SelectedSalesArea);
+            //}
             UpdateAllSelected();
             
             isLoading = false;
@@ -222,7 +221,7 @@ namespace AztecTariff.Pages
         #region SalesAreas
         async Task LoadSites()
         {
-            Sites = await saService.GetAllFullSites();
+            Sites = await saService.GetAllFullSitesByDate(selectedDateValue);
         }
 
         void SiteMoved(GridRowDropEventArgs<FullSite> args)
@@ -491,7 +490,7 @@ namespace AztecTariff.Pages
                 var x = SelectedSalesArea.Categories.Select(x => x.Products.Where(p => p.ProductId == foundItem.ProductId).ToList());
                 var gridItem = x.First().First();
                 //var gridItem = SelectedSalesArea.Categories.Select(x => x.Products.Where(p => p.ProductId == foundItem.ProductId).First()).First();
-                foundItem.Price = EditFullProduct.Price;
+                foundItem.Price = (double)EditFullProduct.Price;
                 gridItem.Price = EditFullProduct.Price;
                 await pricingService.UpdatePricing(foundItem);
                 await Task.Delay(1);
@@ -544,13 +543,21 @@ namespace AztecTariff.Pages
         {
             await ExitEditAsync();
         }
+
+        async Task DateChanged()
+        {
+            isLoading = true;
+            await LoadSites();
+            //Look at just updating the prices rather than getting all the sites again
+            isLoading = false;
+        }
         #endregion
 
         #region PDF
         async Task UpdatePDF()
         {
             if (SelectedSalesArea.Categories.Sum(x => x.LinesRequired) < 5) return;
-            docname = await pDFMaker.MakePdf(SelectedSalesArea, selectedTemplate, includeAbv);
+            docname = pDFMaker.MakePDF(SelectedSalesArea, selectedTemplate, includeAbv);
             if (string.IsNullOrWhiteSpace(docname)) return;
             Byte[] fileBytes = File.ReadAllBytes(@$"{docname}");
             var content = Convert.ToBase64String(fileBytes);

@@ -22,9 +22,9 @@ namespace TariffTest
                 TemplateFolderLocation = "C:\\Users\\AdamM2\\OneDrive - Zonal Retail Data Systems Limited\\Desktop\\TariffNotesNStuff",
                 WordFileLocation = "C:\\Users\\AdamM2\\OneDrive - Zonal Retail Data Systems Limited\\Desktop\\TariffNotesNStuff\\New folder\\Test.docx",
             };
-            var optionsBuilder = new DbContextOptionsBuilder<ApplicationDBContext>();
+            var optionsBuilder = new DbContextOptionsBuilder<TariffDatabaseContext>();
             optionsBuilder.UseSqlite();
-            var _dbContext = new ApplicationDBContext(optionsBuilder.Options);
+            var _dbContext = new TariffDatabaseContext(optionsBuilder.Options);
 
             FullSalesArea fullSalesArea = FileWritingService.LoadFromXml<FullSalesArea>("C:\\Users\\AdamM2\\Downloads\\TestSalesArea.xml");
             PDFMakerService pdfMakerService = new PDFMakerService(s);

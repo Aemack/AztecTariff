@@ -1,4 +1,5 @@
 ﻿using AztecTariff.Models;
+using AztecTariffModels.Models;
 using CsvHelper;
 using System;
 using System.Formats.Asn1;
@@ -68,7 +69,6 @@ namespace AztecTariff.Services
             CreateSiteListCSV(3);
             var r = new Random();
             CreateDrinkListCSV(90);
-            //CreateDrinkListCSV(r.Next(50,100));
             CreatePricingList();
         }
 
@@ -87,7 +87,7 @@ namespace AztecTariff.Services
                         Id = i,
                         SalesAreaId = site.SalesAreaId,
                         EstateId = site.EstateId,
-                        Price = r.Next(10, 100) / 10m,
+                        Price = r.Next(10, 100) / 10d,
                         ProductId = prod.ProductId
                     };
 
@@ -142,14 +142,7 @@ namespace AztecTariff.Services
             }
 
             string csvLocation = "";
-            //if (string.IsNullOrWhiteSpace(_settings.CSVFileLocation))
-            //{
             csvLocation = @"C:\Users\AdamM2\OneDrive - Zonal Retail Data Systems Limited\Desktop\TariffNotesNStuff\New Folder";
-            //}
-            //else
-            //{
-            //    csvLocation = _settings.CSVFileLocation;
-            //}
             using (var writer = new StreamWriter(Path.Combine(csvLocation, "CSVs/Sites.csv")))
             using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
             {
@@ -263,19 +256,14 @@ namespace AztecTariff.Services
             }
 
             string csvLocation = "";
-            //if (string.IsNullOrWhiteSpace(_settings.CSVFileLocation))
-            //{
-                csvLocation = @"C:\Users\AdamM2\OneDrive - Zonal Retail Data Systems Limited\Desktop\TariffNotesNStuff\New Folder";
-                //}
-                //else
-                //{
-                //    csvLocation = _settings.CSVFileLocation;
-                //}
-                using (var writer = new StreamWriter(Path.Combine(csvLocation, "CSVs/DrinkList.csv")))
-                using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
-                {
-                    csv.WriteRecords(Products);
-                }
+
+            csvLocation = @"C:\Users\AdamM2\OneDrive - Zonal Retail Data Systems Limited\Desktop\TariffNotesNStuff\New Folder";
+
+            using (var writer = new StreamWriter(Path.Combine(csvLocation, "CSVs/DrinkList.csv")))
+            using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
+            {
+                csv.WriteRecords(Products);
+            }
         }
 
         private string ShorthandText(string v)

@@ -1,15 +1,15 @@
-﻿using AztecTariff.Data;
-using AztecTariff.Models;
+﻿using AztecTariff.Models;
+using AztecTariffModels.Models;
 using System.Reflection.Metadata.Ecma335;
 
 namespace AztecTariff.Services
 {
     public class PDFDataService
     {
-        private readonly ApplicationDBContext _dbContext;
+        private readonly TariffDatabaseContext _dbContext;
         Settings _settings;
 
-        public PDFDataService(ApplicationDBContext dbContext, Settings settings)
+        public PDFDataService(TariffDatabaseContext dbContext, Settings settings)
         {
             _dbContext = dbContext;
             _settings = settings;

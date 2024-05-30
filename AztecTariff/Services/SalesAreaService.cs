@@ -1,5 +1,5 @@
-﻿using AztecTariff.Data;
-using AztecTariff.Models;
+﻿using AztecTariff.Models;
+using AztecTariffModels.Models;
 using CsvHelper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.VisualBasic;
@@ -11,12 +11,12 @@ namespace AztecTariff.Services
 {
     public class SalesAreaService
     {
-        private readonly ApplicationDBContext _dbContext;
+        private readonly TariffDatabaseContext _dbContext;
         ProductService _productService;
         CategoryService _categoryService;
         Settings _settings;
 
-        public SalesAreaService(ApplicationDBContext dbContext, Settings settings)
+        public SalesAreaService(TariffDatabaseContext dbContext, Settings settings)
         {
             _settings = settings;
             _dbContext = dbContext;
@@ -24,31 +24,6 @@ namespace AztecTariff.Services
             _categoryService = new CategoryService(dbContext, settings);
         }
 
-        public async Task PopulateSalesAreaTable()
-        {
-            //Change to API Call 
-            _dbContext.SalesAreas.RemoveRange(_dbContext.SalesAreas);
-            await _dbContext.SaveChangesAsync();
-
-
-            var options = new RestClientOptions(_settings.APIBaseAddress)
-            {
-                
-                MaxTimeout = -1,
-            };
-            var client = new RestClient(options);
-            var request = new RestRequest($"api/SalesArea", Method.Get);
-            RestResponse response = await client.ExecuteAsync(request);
-            var json = response.Content;
-            JsonSerializerOptions jsoptions = new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            };
-            List<SalesArea> salesAreas = JsonSerializer.Deserialize<List<SalesArea>>(json,jsoptions);
-
-
-            await AddSalesAreas(salesAreas);
-        }
 
         public async Task AddSalesAreas(List<SalesArea> sites)
         {
@@ -87,7 +62,82 @@ namespace AztecTariff.Services
             return fullSites;
         }
 
+        public async Task<List<FullSite>> GetAllFullSitesByDate(DateTime date)
+        {
+            var salesAreas = await _dbContext.SalesAreas.ToListAsync();
+
+            var groupedSalesArea = salesAreas.GroupBy(g => g.SiteId);
+            var fullSites = new List<FullSite>();
+
+            foreach (var salesArea in groupedSalesArea)
+            {
+                var fs = new FullSite()
+                {
+                    SiteId = salesArea.Key,
+                    SiteName = salesArea.Select(g => g.SiteName).First(),
+                    SalesAreas = await GetSitesFullSalesAreasByDate(salesArea.Key, date)
+
+                };
+
+                fullSites.Add(fs);
+            }
+
+            return fullSites;
+        }
+
         public async Task<List<FullSalesArea>> GetSitesFullSalesAreas(int id)
+        {
+            var fullsalesareas = new List<FullSalesArea>();
+            var salesareas = await _dbContext.SalesAreas.Where(s => s.SiteId == id && !s.isEvent).ToListAsync();
+
+            foreach (var sa in salesareas)
+            {
+                var fsa = new FullSalesArea()
+                {
+                    SalesAreaId = sa.SalesAreaId,
+                    SalesAreaName = sa.SAName,
+                    TariffName = sa.TariffName,
+                    Included = sa.Included,
+                    FooterMessage = sa.FooterMessage,
+                    HeaderMessage = sa.HeaderMessage
+                };
+
+
+                fsa.Events = await GetEventBySalesArea(sa.SalesAreaId);
+                fsa.Categories = await _categoryService.GetSalesAreaCategories(sa.SalesAreaId);
+
+                fullsalesareas.Add(fsa);
+            }
+            return fullsalesareas;
+        }
+
+        public async Task<List<FullSalesArea>> GetSitesFullSalesAreasByDate(int id, DateTime date)
+        {
+            var fullsalesareas = new List<FullSalesArea>();
+            var salesareas = await _dbContext.SalesAreas.Where(s => s.SiteId == id && !s.isEvent).ToListAsync();
+
+            foreach (var sa in salesareas)
+            {
+                var fsa = new FullSalesArea()
+                {
+                    SalesAreaId = sa.SalesAreaId,
+                    SalesAreaName = sa.SAName,
+                    TariffName = sa.TariffName,
+                    Included = sa.Included,
+                    FooterMessage = sa.FooterMessage,
+                    HeaderMessage = sa.HeaderMessage
+                };
+
+
+                fsa.Events = await GetEventBySalesArea(sa.SalesAreaId);
+                fsa.Categories = await _categoryService.GetSalesAreaCategories(sa.SalesAreaId);
+
+                fullsalesareas.Add(fsa);
+            }
+            return fullsalesareas;
+        }
+
+        public async Task<List<FullSalesArea>> GetSitesFullSalesAreasByDate(int id)
         {
             var fullsalesareas = new List<FullSalesArea>();
             var salesareas = await _dbContext.SalesAreas.Where(s => s.SiteId == id && !s.isEvent).ToListAsync();

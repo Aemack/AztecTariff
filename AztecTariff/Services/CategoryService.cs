@@ -1,7 +1,6 @@
-﻿using AztecTariff.Data;
-using AztecTariff.Models;
+﻿using AztecTariff.Models;
+using AztecTariffModels.Models;
 using CsvHelper;
-using DocumentFormat.OpenXml.Office2010.Excel;
 using Microsoft.EntityFrameworkCore;
 using System.Globalization;
 
@@ -9,12 +8,12 @@ namespace AztecTariff.Services
 {
     public class CategoryService
     {
-        private readonly ApplicationDBContext _dbContext;
+        private readonly TariffDatabaseContext _dbContext;
         private readonly ProductService _productService;
         private readonly PricingService _pricingService;
         
 
-        public CategoryService(ApplicationDBContext dbContext, Settings settings)
+        public CategoryService(TariffDatabaseContext dbContext, Settings settings)
         {
             _dbContext = dbContext;
             _productService = new ProductService(dbContext, settings);
@@ -31,6 +30,30 @@ namespace AztecTariff.Services
                 var cat = await _dbContext.Products.Where(p => p.CategoryId == category).FirstAsync();
                 var fc = new FullCategory();
                 fc.Products = (await _productService.GetFullProductsByCategory(category, salesAreaId)).OrderBy(x => x.ProductTariffName).ToList();
+                fc.TariffCategory = cat.TariffCategory;
+                fc.CategoryName  = cat.CategoryName;
+                fc.Id = category;
+                fc.SummarizedCategory = sumCats.Where(x => x.CategoryId == category).FirstOrDefault();
+                fc.IsSummarized = (fc.SummarizedCategory != null);
+
+                fullcats.Add(fc);
+            }
+
+
+            return fullcats;
+        }
+
+        public async Task<List<FullCategory>> GetSalesAreaCategoriesByDate(int salesAreaId, DateTime date)
+        {
+            var categories = _dbContext.Products.Select(p => p.CategoryId).ToList().Distinct();
+            var sumCats = await _dbContext.SummarizedCategories.Where(s => s.SalesAreaID == salesAreaId).ToListAsync();
+
+            var fullcats = new List<FullCategory>();
+            foreach (var category in categories)
+            {
+                var cat = await _dbContext.Products.Where(p => p.CategoryId == category).FirstAsync();
+                var fc = new FullCategory();
+                fc.Products = (await _productService.GetFullProductsByCategoryByDate(category, salesAreaId, date)).OrderBy(x => x.ProductTariffName).ToList();
                 fc.TariffCategory = cat.TariffCategory;
                 fc.CategoryName  = cat.CategoryName;
                 fc.Id = category;

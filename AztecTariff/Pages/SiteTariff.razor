@@ -1,13 +1,13 @@
 ﻿@page "/SiteTariff"
-@using AztecTariff.Data;
 @using AztecTariff.Models;
 @using AztecTariff.Services;
+@using AztecTariffModels.Models;
 @using Microsoft.EntityFrameworkCore;
 @using Telerik.FontIcons;
 
 @inherits BasePageClass
 
-@inject IDbContextFactory<ApplicationDBContext> DbFactory
+
 @inject Settings settings
 @inject NavigationManager nav
 @inject PDFDataService pdfdataservice
@@ -16,6 +16,8 @@
 @inject IJSRuntime JSRuntime
 @inject IWebHostEnvironment WebHostEnvironment
 @inject HttpClient HttpClient
+@inject CategoryService catService
+@inject SalesAreaService saService 
 
 @if (isLoading)
 {
@@ -25,9 +27,16 @@
 <div class="container-fluid" style="height:100%">
     @*Toast*@
     <div class="position-absolute bottom-0 end-0">
-        @*<Toast @ref="Toast"></Toast>*@
+        <Toast @ref="Toast"></Toast>
     </div>
 
+    <div class="w-100 d-flex flex-row">
+
+        <TelerikDatePicker @bind-Value="selectedDateValue"
+                           Format="dd MMMM yyyy"
+                           OnClose="@DateChanged">
+        </TelerikDatePicker>
+    </div>
     <div class="@gridClass" style="height:100vh">
 
         @*GridTabs*@
