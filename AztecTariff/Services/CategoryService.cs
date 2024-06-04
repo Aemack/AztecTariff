@@ -19,7 +19,7 @@ namespace AztecTariff.Services
             _productService = new ProductService(dbContext, settings);
         }
 
-        public async Task<List<FullCategory>> GetSalesAreaCategories(int salesAreaId)
+        public async Task<List<FullCategory>> GetSalesAreaCategories(int salesAreaId, DateTime selectedDate)
         {
             var categories = _dbContext.Products.Select(p => p.CategoryId).ToList().Distinct();
             var sumCats = await _dbContext.SummarizedCategories.Where(s => s.SalesAreaID == salesAreaId).ToListAsync();
@@ -29,7 +29,7 @@ namespace AztecTariff.Services
             {
                 var cat = await _dbContext.Products.Where(p => p.CategoryId == category).FirstAsync();
                 var fc = new FullCategory();
-                fc.Products = (await _productService.GetFullProductsByCategory(category, salesAreaId)).OrderBy(x => x.ProductTariffName).ToList();
+                fc.Products = (await _productService.GetFullProductsByCategory(category, salesAreaId, selectedDate)).OrderBy(x => x.ProductTariffName).ToList();
                 fc.TariffCategory = cat.TariffCategory;
                 fc.CategoryName  = cat.CategoryName;
                 fc.Id = category;
@@ -126,12 +126,12 @@ namespace AztecTariff.Services
 
         public int GetCategoryId(string category)
         {
-            return _dbContext.Products.Where(x => x.TariffCategory == category).First().CategoryId;
+            return _dbContext.Products.Where(x => x.CategoryName == category).First().CategoryId;
         }
 
         public async Task DeleteSummarizedCategory(FullCategory category, int id)
         {
-            var foundEntry = await _dbContext.SummarizedCategories.Where(x => x.Id == id && x.Category == category.TariffCategory).FirstOrDefaultAsync();
+            var foundEntry = await _dbContext.SummarizedCategories.Where(x => x.SalesAreaID == id && x.Category == category.CategoryName).FirstOrDefaultAsync();
             if (foundEntry != null)
             {
                 _dbContext.SummarizedCategories.Remove(foundEntry);

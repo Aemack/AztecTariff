@@ -23,15 +23,24 @@ namespace AztecTariff.Services
             return await _dbContext.Pricings.ToListAsync();
         }
 
-        public async Task<double> GetProductPrice(long productId, int salesareaId)
+        public async Task<double> GetProductPrice(long productId, int salesareaId, DateTime selectedDate)
         {
-            var x =  await _dbContext.Pricings.Where(p => p.ProductId == productId && p.SalesAreaId == salesareaId).FirstOrDefaultAsync();
+            Pricing x = new Pricing();
+            if (selectedDate == DateTime.MinValue)
+            {
+                x = await _dbContext.Pricings.Where(p => p.ProductId == productId && p.SalesAreaId == salesareaId).FirstOrDefaultAsync();
+            }
+            else
+            {
+                x = await _dbContext.Pricings.Where(p => p.ProductId == productId && p.SalesAreaId == salesareaId && p.StartDate <= selectedDate && p.EndDate >= selectedDate).FirstOrDefaultAsync();
+            }
+
             return x.Price;
         }
 
-        public async Task<Pricing> GetProductPricing(long productId, int salesareaId)
+        public async Task<Pricing> GetProductPricing(long productId, int salesareaId, DateTime selectedDate)
         {
-            return await _dbContext.Pricings.Where(p => p.ProductId == productId && p.SalesAreaId == salesareaId).FirstOrDefaultAsync();
+            return await _dbContext.Pricings.Where(p => p.ProductId == productId && p.SalesAreaId == salesareaId && p.StartDate <= selectedDate && p.EndDate >= selectedDate).FirstOrDefaultAsync();
             
         }
 
@@ -48,6 +57,15 @@ namespace AztecTariff.Services
             p.ProductId = pricing.ProductId;
             p.SalesAreaId = pricing.SalesAreaId;
             p.EstateId = pricing.EstateId;
+
+            await _dbContext.SaveChangesAsync();
+        }
+
+        public async Task UpdatePricingByDate(long ProductId, double Price, DateTime CurrentDate)
+        {
+            var p = await _dbContext.Pricings.Where(pr => pr.ProductId == ProductId && pr.StartDate <= CurrentDate && pr.EndDate >= CurrentDate).FirstOrDefaultAsync();
+            if(p == null ) return;
+            p.Price = Price;
 
             await _dbContext.SaveChangesAsync();
         }
@@ -79,8 +97,20 @@ namespace AztecTariff.Services
 
         public async Task<double> GetProductPriceByDate(long productId, int salesAreaId, DateTime date)
         {
-            var x = await _dbContext.Pricings.Where(p => p.ProductId == productId && p.SalesAreaId == salesAreaId && (p.StartDate <= date && p.EndDate > date)).FirstOrDefaultAsync();
+            var x = await _dbContext.Pricings.Where(p => p.ProductId == productId && p.SalesAreaId == salesAreaId && (p.StartDate <= date && p.EndDate >= date)).FirstOrDefaultAsync();
             return x.Price;
+        }
+
+        public DateTime GetMostRecentDate()
+        {
+            var x = _dbContext.Pricings.ToList().MaxBy(d => d.EndDate);
+            return x.EndDate;
+        }
+
+        public DateTime GetEarliestDate()
+        {
+            var x = _dbContext.Pricings.ToList().MinBy(d => d.StartDate);
+            return x.EndDate;
         }
     }
 }

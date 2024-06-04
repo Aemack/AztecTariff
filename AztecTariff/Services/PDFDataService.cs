@@ -100,7 +100,7 @@ namespace AztecTariff.Services
                 {
                     PDFData = p,
                     Products = GetProductDataBySite(p.Id),
-                    SalesArea = _dbContext.SalesAreas.Where(x => x.SalesAreaId == p.SalesAreaID).FirstOrDefault()
+                    SalesArea = _dbContext.SalesAreas.Where(x => x.SalesAreaId == p.SalesAreaID).FirstOrDefault(),
                 });
             }
             return fullpdfdatas;
@@ -111,5 +111,7 @@ namespace AztecTariff.Services
             _dbContext.PDFProducts.RemoveRange(_dbContext.PDFProducts);
             await _dbContext.SaveChangesAsync();
         }
+
+        
     }
 }

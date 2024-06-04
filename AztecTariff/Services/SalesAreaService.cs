@@ -39,29 +39,6 @@ namespace AztecTariff.Services
             return await _dbContext.SalesAreas.Where(s => s.isEvent).ToListAsync();
         }
 
-        public async Task<List<FullSite>> GetAllFullSites()
-        {
-            var salesAreas = await _dbContext.SalesAreas.ToListAsync();
-
-            var groupedSalesArea = salesAreas.GroupBy(g => g.SiteId);
-            var fullSites = new List<FullSite>();
-
-            foreach (var salesArea in groupedSalesArea)
-            {
-                var fs = new FullSite()
-                {
-                    SiteId = salesArea.Key,
-                    SiteName = salesArea.Select(g => g.SiteName).First(),
-                    SalesAreas = await GetSitesFullSalesAreas(salesArea.Key)
-
-                };
-
-                fullSites.Add(fs);
-            }
-
-            return fullSites;
-        }
-
         public async Task<List<FullSite>> GetAllFullSitesByDate(DateTime date)
         {
             var salesAreas = await _dbContext.SalesAreas.ToListAsync();
@@ -85,32 +62,6 @@ namespace AztecTariff.Services
             return fullSites;
         }
 
-        public async Task<List<FullSalesArea>> GetSitesFullSalesAreas(int id)
-        {
-            var fullsalesareas = new List<FullSalesArea>();
-            var salesareas = await _dbContext.SalesAreas.Where(s => s.SiteId == id && !s.isEvent).ToListAsync();
-
-            foreach (var sa in salesareas)
-            {
-                var fsa = new FullSalesArea()
-                {
-                    SalesAreaId = sa.SalesAreaId,
-                    SalesAreaName = sa.SAName,
-                    TariffName = sa.TariffName,
-                    Included = sa.Included,
-                    FooterMessage = sa.FooterMessage,
-                    HeaderMessage = sa.HeaderMessage
-                };
-
-
-                fsa.Events = await GetEventBySalesArea(sa.SalesAreaId);
-                fsa.Categories = await _categoryService.GetSalesAreaCategories(sa.SalesAreaId);
-
-                fullsalesareas.Add(fsa);
-            }
-            return fullsalesareas;
-        }
-
         public async Task<List<FullSalesArea>> GetSitesFullSalesAreasByDate(int id, DateTime date)
         {
             var fullsalesareas = new List<FullSalesArea>();
@@ -122,6 +73,7 @@ namespace AztecTariff.Services
                 {
                     SalesAreaId = sa.SalesAreaId,
                     SalesAreaName = sa.SAName,
+                    SiteName = sa.SiteName,
                     TariffName = sa.TariffName,
                     Included = sa.Included,
                     FooterMessage = sa.FooterMessage,
@@ -130,33 +82,8 @@ namespace AztecTariff.Services
 
 
                 fsa.Events = await GetEventBySalesArea(sa.SalesAreaId);
-                fsa.Categories = await _categoryService.GetSalesAreaCategories(sa.SalesAreaId);
-
-                fullsalesareas.Add(fsa);
-            }
-            return fullsalesareas;
-        }
-
-        public async Task<List<FullSalesArea>> GetSitesFullSalesAreasByDate(int id)
-        {
-            var fullsalesareas = new List<FullSalesArea>();
-            var salesareas = await _dbContext.SalesAreas.Where(s => s.SiteId == id && !s.isEvent).ToListAsync();
-
-            foreach (var sa in salesareas)
-            {
-                var fsa = new FullSalesArea()
-                {
-                    SalesAreaId = sa.SalesAreaId,
-                    SalesAreaName = sa.SAName,
-                    TariffName = sa.TariffName,
-                    Included = sa.Included,
-                    FooterMessage = sa.FooterMessage,
-                    HeaderMessage = sa.HeaderMessage
-                };
-
-
-                fsa.Events = await GetEventBySalesArea(sa.SalesAreaId);
-                fsa.Categories = await _categoryService.GetSalesAreaCategories(sa.SalesAreaId);
+                fsa.Categories = await _categoryService.GetSalesAreaCategoriesByDate(sa.SalesAreaId, date);
+                //fsa.Categories = await _categoryService.GetSalesAreaCategories(sa.SalesAreaId, date);
 
                 fullsalesareas.Add(fsa);
             }
@@ -166,10 +93,10 @@ namespace AztecTariff.Services
         public async Task<List<FullEvent>> GetEventBySalesArea(int salesAreaId)
         {
             var ev = await _dbContext.SalesAreas.Where(s => s.OriginalSalesAreaId == salesAreaId).ToListAsync();
-            return await ToFullEvent(ev);
+            return await ToFullEvents(ev);
         }
 
-        public  async Task<List<FullEvent>> ToFullEvent(List<SalesArea> ev)
+        public  async Task<List<FullEvent>> ToFullEvents(List<SalesArea> ev)
         {
             var eventsList = new List<FullEvent>();
             foreach(var s in ev)
@@ -187,12 +114,13 @@ namespace AztecTariff.Services
                 OriginalSalesAreaId = (int)sa.OriginalSalesAreaId,
                 SalesAreaId = sa.SalesAreaId,
                 SalesAreaName = sa.SAName,
+                SiteName = sa.SiteName,
                 FooterMessage = sa.FooterMessage,
                 HeaderMessage = sa.HeaderMessage,
                 Included = sa.Included,
                 TariffName = sa.TariffName
             };
-            x.Categories = await _categoryService.GetSalesAreaCategories(x.SalesAreaId);
+            x.Categories = await _categoryService.GetSalesAreaCategories(x.SalesAreaId, DateTime.MinValue);
 
             return x;
 
@@ -221,6 +149,7 @@ namespace AztecTariff.Services
             var sa = await _dbContext.SalesAreas.Where(s => s.SalesAreaId == salesArea.SalesAreaId).FirstAsync();
             sa.SAName = salesArea.SAName;
             sa.TariffName = salesArea.TariffName;
+            sa.SiteName = salesArea.SiteName;
             sa.SiteName = salesArea.SiteName;
             sa.HeaderMessage = salesArea.HeaderMessage;
             sa.SiteId = salesArea.SiteId;

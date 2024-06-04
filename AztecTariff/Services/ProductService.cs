@@ -94,7 +94,7 @@ namespace AztecTariff.Services
             }
         }
 
-        public async Task<List<FullProduct>> GetFullProductsByCategory(int category, int salesAreaId)
+        public async Task<List<FullProduct>> GetFullProductsByCategory(int category, int salesAreaId, DateTime selectedDate)
         {
             var fullProds = new List<FullProduct>();
             var prods = await _dbContext.Products.Where(p => p.CategoryId == category).ToListAsync();
@@ -105,7 +105,7 @@ namespace AztecTariff.Services
                     ABV = prod.ABV,
                     Included = prod.Included,
                     Portion = prod.Portion,
-                    Price = await _pricingService.GetProductPrice(prod.ProductId, salesAreaId),
+                    Price = await _pricingService.GetProductPrice(prod.ProductId, salesAreaId, selectedDate),
                     ProdName = prod.ProdName,
                     ProductId = prod.ProductId,
                     ProductTariffName = prod.ProductTariffName,

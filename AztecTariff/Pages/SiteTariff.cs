@@ -29,7 +29,7 @@ namespace AztecTariff.Pages
 
         FullSite SelectedSite = new FullSite();
         FullSalesArea SelectedSalesArea = new FullSalesArea();
-        PDFMakerService pDFMaker;   
+        PDFMakerService pDFMaker;
 
 
         SalesArea eventSAModel;
@@ -44,7 +44,9 @@ namespace AztecTariff.Pages
         List<FullPDFData> ExportableSalesAreas = new List<FullPDFData>();
         List<FullPDFData> SelectedSalesAreas = new List<FullPDFData>();
 
-        DateTime selectedDateValue = DateTime.Today;
+        List<FullSalesArea> ExportSalesAreas = new List<FullSalesArea>();
+
+        DateTime selectedDateValue;// = DateTime.Today;
 
         bool sitesCollapsed;
         bool categoriesCollapsed;
@@ -56,6 +58,9 @@ namespace AztecTariff.Pages
         //string categoryTableClass => (categoriesCollapsed) ? "grid-col-collapsed p-0" : "grid-col col p-0";
         string sitesButtonClass => (sitesCollapsed) ? "btn overlay-button-1" : "d-none";
         string categoryButtonClass => (categoriesCollapsed) ? "btn overlay-button-1" : "d-none";
+
+        DateTime MaxDatePickerDate;
+        DateTime MinDatePickerDate;
 
         byte[] PdfSource;
         string selectedTemplate;
@@ -83,6 +88,11 @@ namespace AztecTariff.Pages
             selectedTemplate = templateChoices[0];
             await Task.Delay(1);
             pDFMaker = new PDFMakerService(settings);
+            MaxDatePickerDate = pricingService.GetMostRecentDate();
+            MinDatePickerDate = pricingService.GetEarliestDate();
+            
+
+            selectedDateValue = MaxDatePickerDate;
 
             await LoadSites();
             //if (Sites.Count > 0 && Sites[0].SalesAreas.Count > 0)
@@ -91,11 +101,9 @@ namespace AztecTariff.Pages
             //    SalesAreaSelected(SelectedSalesArea);
             //}
             UpdateAllSelected();
-            
+
             isLoading = false;
         }
-
-
 
         #region Categories
         async Task CategoryMoved(GridRowDropEventArgs<FullCategory> args)
@@ -135,7 +143,7 @@ namespace AztecTariff.Pages
 
         void UpdateAllSelected()
         {
-            if (SelectedSalesArea.TariffName == null)
+            if (SelectedSalesArea == null || SelectedSalesArea.Categories == null)
             {
                 return;
             }
@@ -150,6 +158,18 @@ namespace AztecTariff.Pages
                     cat.AllSelected = false;
                 }
             }
+        }
+
+        async Task OpenSelectedDropdowns()
+        {
+
+            await InvokeAsync(() => StateHasChanged());
+
+            //foreach(var c in SelectedSalesArea.Categories)
+            //{
+            //    CategoryChevronClicked(c);
+            //}
+
         }
 
         async Task CategoryCheckboxClicked(FullCategory category)
@@ -167,7 +187,6 @@ namespace AztecTariff.Pages
             await Task.Delay(1);
         }
 
-
         public async void SummarizeCategoryToggle(FullCategory category)
         {
             if (category.IsSummarized)
@@ -175,20 +194,23 @@ namespace AztecTariff.Pages
                 isLoading = true;
                 isAddSummaryModalVisible = false;
                 category.SummarizedCategory = null;
+                category.IsSummarized = false;
                 await catService.DeleteSummarizedCategory(category, SelectedSalesArea.SalesAreaId);
                 await UpdatePDF();
                 isLoading = false;
+                StateHasChanged();
+                await Task.Delay(1);
                 return;
             }
 
 
             summaryModel = new SummarizedCategory();
-            summaryModel.Category = category.TariffCategory;
+            summaryModel.Category = category.CategoryName;
             summaryModel.SummaryDescription = "Prices range from";
             summaryModel.SalesAreaID = SelectedSalesArea.SalesAreaId;
             summaryModel.MinPrice = category.IncludedProducts.Select(p => p.Price).Min();
             summaryModel.MaxPrice = category.IncludedProducts.Select(p => p.Price).Max();
-            
+
 
             isAddSummaryModalVisible = true;
         }
@@ -201,13 +223,13 @@ namespace AztecTariff.Pages
 
             summaryModel.CategoryId = catService.GetCategoryId(summaryModel.Category);
             await catService.UpdateSummarizedCategory(summaryModel);
-            
-            var x = SelectedSalesArea.Categories.Where(x => x.TariffCategory == summaryModel.Category).FirstOrDefault();
-            if(x != null)
+
+            var x = SelectedSalesArea.Categories.Where(x => x.CategoryName == summaryModel.Category).FirstOrDefault();
+            if (x != null)
             {
                 x.SummarizedCategory = summaryModel;
             }
-            
+
             await UpdatePDF();
 
             isLoading = false;
@@ -244,6 +266,7 @@ namespace AztecTariff.Pages
 
         void SiteChevronClicked(FullSite site)
         {
+            if(site == null) return;
             isLoading = true;
             if (SelectedSites.Contains(site))
             {
@@ -283,23 +306,24 @@ namespace AztecTariff.Pages
 
                 await saService.UpdateSalesArea(foundItem);
                 await Task.Delay(1);
-                await InvokeAsync(() => StateHasChanged());
 
-                await Toast.DisplayMessage("Succesfully Updated Sales Area Price", "bg-green");
                 var x = await saService.GetSalesArea(foundItem.SalesAreaId);
 
 
                 await LoadSites();
                 //UpdateAllSelected();
-                SelectedSalesArea = Sites.Select(s => s.SalesAreas.Where(sa => sa.SalesAreaId == SelectedSalesArea.SalesAreaId).First()).First();
-
+                //SelectedSalesArea = Sites.Select(s => s.SalesAreas.Where(sa => sa.SalesAreaId == SelectedSalesArea.SalesAreaId).First()).First();
+                
+                
                 await UpdatePDF();
+                await Toast.DisplayMessage("Succesfully Updated Sales Area Price", "bg-green");
             }
             catch (Exception ex)
             {
                 await Toast.DisplayMessage("Failed To Update Sales Area Price", "bg-red");
             }
             isLoading = false;
+            await OpenSelectedDropdowns();
         }
 
         async Task ExitEditSAAsync()
@@ -375,7 +399,8 @@ namespace AztecTariff.Pages
 
 
             SelectedSalesArea = newEvent;
-            await LoadSites();
+            //await LoadSites();
+            
             //UpdateAllSelected();
             await UpdatePDF();
 
@@ -462,11 +487,6 @@ namespace AztecTariff.Pages
         #endregion
 
         #region Products
-        async Task ProductMoved(GridRowDropEventArgs<FullProduct> args)
-        {
-            throw new NotImplementedException();
-        }
-
         async Task ProductCheckboxClicked(FullProduct product)
         {
             isLoading = true;
@@ -484,7 +504,7 @@ namespace AztecTariff.Pages
 
             await ExitEditAsync();
 
-            var foundItem = await pricingService.GetProductPricing(EditFullProduct.ProductId, SelectedSalesArea.SalesAreaId);
+            var foundItem = await pricingService.GetProductPricing(EditFullProduct.ProductId, SelectedSalesArea.SalesAreaId, selectedDateValue);
             try
             {
                 var x = SelectedSalesArea.Categories.Select(x => x.Products.Where(p => p.ProductId == foundItem.ProductId).ToList());
@@ -492,7 +512,7 @@ namespace AztecTariff.Pages
                 //var gridItem = SelectedSalesArea.Categories.Select(x => x.Products.Where(p => p.ProductId == foundItem.ProductId).First()).First();
                 foundItem.Price = (double)EditFullProduct.Price;
                 gridItem.Price = EditFullProduct.Price;
-                await pricingService.UpdatePricing(foundItem);
+                await pricingService.UpdatePricingByDate(foundItem.ProductId, EditFullProduct.Price, selectedDateValue);
                 await Task.Delay(1);
                 await Task.Delay(1);
                 await InvokeAsync(() => StateHasChanged());
@@ -504,7 +524,7 @@ namespace AztecTariff.Pages
             {
                 await Toast.DisplayMessage("Failed To Update Sales Area Price", "bg-red");
             }
-
+            
             await UpdatePDF();
             isLoading = false;
         }
@@ -524,9 +544,14 @@ namespace AztecTariff.Pages
 
         }
 
+        async Task OnValidProductSubmit()
+        {
+            Console.WriteLine(EditFullProduct);
+            await pricingService.UpdatePricingByDate(EditFullProduct.ProductId, EditFullProduct.Price, selectedDateValue);
+        }
+
         void OnValidSubmit()
         {
-            Console.WriteLine();
         }
 
         async Task ExitEditAsync()
@@ -548,6 +573,7 @@ namespace AztecTariff.Pages
         {
             isLoading = true;
             await LoadSites();
+            await SalesAreaSelected(Sites.Select(x => x.SalesAreas.Where(y => y.SalesAreaId == SelectedSalesArea.SalesAreaId).FirstOrDefault()).FirstOrDefault());
             //Look at just updating the prices rather than getting all the sites again
             isLoading = false;
         }
@@ -606,19 +632,24 @@ namespace AztecTariff.Pages
 
         public void GetAllPDFData()
         {
-            ExportableSalesAreas = pdfdataservice.GetAllFullPDFData();
+            ExportSalesAreas = Sites.SelectMany(x => x.SalesAreas).ToList();
         }
 
         public async Task ExportFromMultiple()
         {
-            var x = ExportableSalesAreas.Where(x => x.Selected).ToList();
-            await CreateZipFile(x);
+            var exportables = ExportSalesAreas.Where(x => x.Selected).ToList();
+            List<string> filePaths = new List<string>();
+            foreach(var e in exportables)
+            {
+                filePaths.Add(pDFMaker.MakePDF(e, selectedTemplate, includeAbv));
+            }
+
+            await CreateZipFile(filePaths);
         }
 
-        private async Task CreateZipFile(List<FullPDFData> x)
+        private async Task CreateZipFile(List<string> filePaths)
         {
-            var filePaths = x.Select(x => x.PDFData.TempFileName).ToList();
-
+            
             using (var memoryStream = new MemoryStream())
             {
                 using (var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
@@ -668,9 +699,12 @@ namespace AztecTariff.Pages
 
         public async Task PrintMultiplePDF()
         {
-            var x = ExportableSalesAreas.Where(x => x.Selected).ToList();
-
-            var filePaths = x.Select(x => x.PDFData.TempFileName).ToList();
+            var exportables = ExportSalesAreas.Where(x => x.Selected).ToList();
+            List<string> filePaths = new List<string>();
+            foreach (var e in exportables)
+            {
+                filePaths.Add(pDFMaker.MakePDF(e, selectedTemplate, includeAbv));
+            }
 
             foreach (var filePath in filePaths)
             {

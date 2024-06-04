@@ -17,7 +17,7 @@
 @inject IWebHostEnvironment WebHostEnvironment
 @inject HttpClient HttpClient
 @inject CategoryService catService
-@inject SalesAreaService saService 
+@inject SalesAreaService saService
 
 @if (isLoading)
 {
@@ -34,15 +34,17 @@
 
         <TelerikDatePicker @bind-Value="selectedDateValue"
                            Format="dd MMMM yyyy"
-                           OnClose="@DateChanged">
+                           OnClose="@DateChanged"
+                           Max="MaxDatePickerDate"
+                           Min="MinDatePickerDate">
         </TelerikDatePicker>
     </div>
     <div class="@gridClass" style="height:100vh">
 
         @*GridTabs*@
         <div class="position-absolute d-flex flex-column" style="top: 25%;left: 150px;width:12pc;">
-        <button class="@sitesButtonClass" style="border-radius:20px;" @onclick="@MinimiseSites">Sites</button>
-        <button class="@categoryButtonClass" style="border-radius:20px;" @onclick="@MinimiseCategories">Categories</button>
+            <button class="@sitesButtonClass" style="border-radius:20px;" @onclick="@MinimiseSites">Sites</button>
+            <button class="@categoryButtonClass" style="border-radius:20px;" @onclick="@MinimiseCategories">Categories</button>
         </div>
 
         @*List of Sites*@
@@ -52,7 +54,9 @@
                      EditMode="GridEditMode.Popup">
 
             <GridToolBarTemplate>
-                <button class="btn" @onclick="@MinimiseSites"><span class="oi oi-chevron-left" aria-hidden="true"></span></button>
+                <button class="btn" @onclick="@MinimiseSites">
+                    <span class="oi oi-chevron-left" aria-hidden="true"></span>
+                </button>
                 <label>Sites</label>
             </GridToolBarTemplate>
 
@@ -152,7 +156,7 @@
                 </td>
             </RowTemplate>
             @*<GridColumns>
-                <GridColumn Field="Name" Title="Site" />
+            <GridColumn Field="Name" Title="Site" />
             </GridColumns>*@
         </TelerikGrid>
 
@@ -160,7 +164,6 @@
         <TelerikGrid class="@categoryTableClass" Data="SelectedSalesArea.Categories" @ref="CatGrid"
                      SelectionMode="GridSelectionMode.None"
                      Pageable="false"
-                     
                      OnRowDrop="@((GridRowDropEventArgs<FullCategory> args) => CategoryMoved(args))"
                      EditMode="@GridEditMode.Popup">
 
@@ -191,18 +194,18 @@
                         {
                             <TelerikToggleButton @bind-Selected="@category.IsSummarized" Class="col-3 m-auto"
                                                  Title="Summarize"
-                                                 
                                                  OnClick="@(() => SummarizeCategoryToggle(category))">
-                                                 @(category.IsSummarized ? "Summarized" : "Summarize")
+                                @(category.IsSummarized ? "Summarized" : "Summarize")
                             </TelerikToggleButton>
 
-                            <input class="col m-auto" @bind="@category.AllSelected" type="checkbox" style="height:15px;" @onclick="@(() => CategoryCheckboxClicked(category))" />   
+                            <input class="col m-auto" @bind="@category.AllSelected" type="checkbox" style="height:15px;" @onclick="@(() => CategoryCheckboxClicked(category))" />
                         }
                         else
                         {
                             <TelerikToggleButton Class="col-3 m-auto"
                                                  Title="Summarize"
-                                                 Enabled=false>
+                                                 Enabled=false
+                                                 OnClick="@(() => SummarizeCategoryToggle(category))">
                                 @(category.IsSummarized ? "Summarized" : "Summarize")
                             </TelerikToggleButton>
                             <input class="col m-auto" @bind="@category.AllSelected" type="checkbox" style="height:15px;" disabled />
@@ -216,8 +219,7 @@
                         <TelerikGrid class="col p-0 grid-no-scroll" Data="category.IncludedProducts" @ref="ProdGrid"
                                      SelectionMode="GridSelectionMode.None"
                                      Pageable="false"
-                                     EditMode="@GridEditMode.Popup"
-                                     OnRowDrop="@((GridRowDropEventArgs<FullProduct> args) => ProductMoved(args))">
+                                     EditMode="@GridEditMode.Popup">
 
                             <GridSettings>
                                 <GridPopupEditSettings MaxHeight="95vh" MaxWidth="95vw"></GridPopupEditSettings>
@@ -226,7 +228,7 @@
                                         @{
                                             EditFullProduct = context.Item as FullProduct;
 
-                                            <TelerikForm Model="@EditFullProduct" OnValidSubmit="@OnValidSubmit">
+                                            <TelerikForm Model="@EditFullProduct" OnValidSubmit="@OnValidProductSubmit">
                                                 <FormItems>
                                                     <div class="d-flex align-items-center justify-content-center"><i>@EditFullProduct.ProdName</i></div>
                                                     <FormItem Field="Price" LabelText="Price"></FormItem>
@@ -304,9 +306,6 @@
                 </PdfViewerToolBarCustomTool>
 
                 <PdfViewerToolBarCustomTool>
-                    <button class="btn" onclick="@ExportMultipleClicked">Export Mulitple</button>
-                </PdfViewerToolBarCustomTool>
-                <PdfViewerToolBarCustomTool>
                     <button class="btn" onclick="@PrintMultipleClicked">Print Multiple</button>
                 </PdfViewerToolBarCustomTool>
 
@@ -361,18 +360,17 @@
     </WindowTitle>
     <WindowContent>
 
-        <TelerikGrid Data="@ExportableSalesAreas" Context="context" SelectedItems="@SelectedSalesAreas" SelectionMode="GridSelectionMode.Multiple">
+        <TelerikGrid Data="@ExportSalesAreas" Context="context" SelectedItems="@ExportSalesAreas" SelectionMode="GridSelectionMode.Multiple">
 
 
             <RowTemplate>
                 @{
-                    var b = (FullPDFData)context;
+                    var b = (FullSalesArea)context;
                     <div class="container">
                         <div class="row">
-                            <label class="col-3">@b.SalesArea.TariffName</label>
-                            <label class="col-3">@b.SalesArea.SAName</label>
-                            <label class="col-3">@b.SalesArea.SiteName</label>
-                            <label class="col-2">@b.PDFData.CreatedDate.ToShortDateString()</label>
+                            <label class="col-3">@b.TariffName</label>
+                            <label class="col-3">@b.SalesAreaName</label>
+                            <label class="col-3">@b.SiteName</label>
 
                             <input type="checkbox" @bind=b.Selected class="col" />
                         </div>
@@ -396,18 +394,32 @@
     </WindowTitle>
     <WindowContent>
 
-        <TelerikGrid Data="@ExportableSalesAreas" Context="context" SelectedItems="@SelectedSalesAreas" SelectionMode="GridSelectionMode.Multiple">
+        <div class="d-flex flex-row justify-content-between">
+
+            <div class="d-flex flex-column"> 
+            <label>Include ABV</label>
+            <TelerikCheckBox @bind-Value="@includeAbv" ></TelerikCheckBox>
+            </div>
+
+            
+            <div class="d-flex flex-column"> 
+            <label>Template Options</label>
+            <TelerikDropDownList  Data="@templateChoices" @bind-Value="selectedTemplate">
+                </TelerikDropDownList>
+            </div>
+
+        </div>
+        <TelerikGrid Data="@ExportSalesAreas" Context="context" SelectedItems="@ExportSalesAreas" SelectionMode="GridSelectionMode.Multiple">
 
 
             <RowTemplate>
                 @{
-                    var b = (FullPDFData)context;
+                    var b = (FullSalesArea)context;
                     <div class="container">
                         <div class="row">
-                            <label class="col-3">@b.SalesArea.TariffName</label>
-                            <label class="col-3">@b.SalesArea.SAName</label>
-                            <label class="col-3">@b.SalesArea.SiteName</label>
-                            <label class="col-2">@b.PDFData.CreatedDate.ToShortDateString()</label>
+                            <label class="col-3">@b.TariffName</label>
+                            <label class="col-3">@b.SalesAreaName</label>
+                            <label class="col-3">@b.SiteName</label>
 
                             <input type="checkbox" @bind=b.Selected class="col" />
                         </div>
@@ -449,7 +461,7 @@
 
         <EditForm Model="@summaryModel">
             <div class="d-flex justify-content-center">
-            <label>@summaryModel.Category</label>
+                <label>@summaryModel.Category</label>
             </div>
 
             <TelerikStackLayout Orientation="StackLayoutOrientation.Horizontal">

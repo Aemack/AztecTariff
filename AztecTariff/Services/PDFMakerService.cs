@@ -49,8 +49,8 @@ namespace AztecTariff.Services
 
             float fontSize = 8;
 
-            
-            int linesPerPage = CalculateLinesPerPage(PageSize.A4.Height, 72, 72, fontSize, fontSize * 1.2f) - 10;
+
+            int linesPerPage = CalculateLinesPerPage(PageSize.A4.Height, 72, 72, fontSize, fontSize * 1.2f);// - 2;
             var catColumns = DistributeCategoriesByPage(salesArea.Categories, linesPerPage);
             if(catColumns.Count == 1) 
             {
@@ -115,66 +115,72 @@ namespace AztecTariff.Services
 
             int currentColumn = 0;
 
-            //foreach (var category in sortedCats)
-            foreach (var category in salesArea.Categories)
+           
+
+            foreach (var categorylist in sortedCats)
+            //foreach (var category in salesArea.Categories)
             {
-                if (category.IncludedInPDFProducts.Count == 0) continue;
-                PdfPTable categoryTable = new PdfPTable(1);
-                categoryTable.DefaultCell.Border = PdfPCell.NO_BORDER;
-
-                categoryTable.AddCell(new PdfPCell(new Phrase(category.TariffCategory, FontFactory.GetFont("Arial", fontSize, Font.BOLD))) { Border = PdfPCell.NO_BORDER });
-
-                PdfPCell categoryCell = new PdfPCell();
-                categoryCell.Border = PdfPCell.NO_BORDER;
-
-
-
-                if (category.IsSummarized)
+                foreach (var category in categorylist)
                 {
-                    var p1Cell = new PdfPCell();
-                    p1Cell.Border = PdfPCell.NO_BORDER;
-                    p1Cell.AddElement(new Phrase($"{category.SummarizedCategory.SummaryDescription} {category.SummarizedCategory.MinPrice} -  {category.SummarizedCategory.MaxPrice}", FontFactory.GetFont("Arial", fontSize - 1)));
-                    categoryTable.AddCell(p1Cell);
-                }
-                else
-                {
-                    PdfPTable productTable = new PdfPTable(new float[] { 5, 3, 3 });
-                    productTable.WidthPercentage = 100;
+                    if (category.IncludedInPDFProducts.Count == 0) continue;
+                    PdfPTable categoryTable = new PdfPTable(1);
+                    categoryTable.DefaultCell.Border = PdfPCell.NO_BORDER;
 
-                    foreach (var product in category.IncludedInPDFProducts)
+                    categoryTable.AddCell(new PdfPCell(new Phrase(category.TariffCategory, FontFactory.GetFont("Arial", fontSize, Font.BOLD))) { Border = PdfPCell.NO_BORDER });
+
+                    PdfPCell categoryCell = new PdfPCell();
+                    categoryCell.Border = PdfPCell.NO_BORDER;
+
+
+
+                    if (category.IsSummarized)
                     {
                         var p1Cell = new PdfPCell();
                         p1Cell.Border = PdfPCell.NO_BORDER;
-                        p1Cell.AddElement(new Phrase(product.ProductTariffName, FontFactory.GetFont("Arial", fontSize - 2)));
-                        productTable.AddCell(p1Cell);
-
-                        var p2Cell = new PdfPCell();
-                        p2Cell.Border = PdfPCell.NO_BORDER;
-                        p2Cell.AddElement(new Phrase($"£{product.Price:0.00}", FontFactory.GetFont("Arial", fontSize - 2)));
-                        productTable.AddCell(p2Cell);
-
-                        var p3Cell = new PdfPCell();
-                        p3Cell.Border = PdfPCell.NO_BORDER;
-
-                        if (includeABV && product.ABV != 0)
-                        {
-                            p3Cell.AddElement(new Phrase($"{product.ABV}%", FontFactory.GetFont("Arial", fontSize - 3)));
-                        }
-                        else
-                        {
-                            p3Cell.AddElement(new Phrase($"", FontFactory.GetFont("Arial", fontSize - 2)));
-                        }
-                        productTable.AddCell(p3Cell);
+                        p1Cell.AddElement(new Phrase($"{category.SummarizedCategory.SummaryDescription} {category.SummarizedCategory.MinPrice} -  {category.SummarizedCategory.MaxPrice}", FontFactory.GetFont("Arial", fontSize - 1)));
+                        categoryTable.AddCell(p1Cell);
                     }
-                    categoryTable.AddCell(productTable);
-                }
-                if (currentColumn >= columns)
-                {
-                    currentColumn = 0;
-                }
+                    else
+                    {
+                        PdfPTable productTable = new PdfPTable(new float[] { 5, 3, 3 });
+                        productTable.WidthPercentage = 100;
 
-                columnPlaceholders[currentColumn].AddElement(categoryTable);
-                currentColumn++;
+                        foreach (var product in category.IncludedInPDFProducts)
+                        {
+                            var p1Cell = new PdfPCell();
+                            p1Cell.Border = PdfPCell.NO_BORDER;
+                            p1Cell.AddElement(new Phrase(product.ProductTariffName, FontFactory.GetFont("Arial", fontSize - 2)));
+                            productTable.AddCell(p1Cell);
+
+                            var p2Cell = new PdfPCell();
+                            p2Cell.Border = PdfPCell.NO_BORDER;
+                            p2Cell.AddElement(new Phrase($"£{product.Price:0.00}", FontFactory.GetFont("Arial", fontSize - 2)));
+                            productTable.AddCell(p2Cell);
+
+                            var p3Cell = new PdfPCell();
+                            p3Cell.Border = PdfPCell.NO_BORDER;
+
+                            if (includeABV && product.ABV != 0)
+                            {
+                                p3Cell.AddElement(new Phrase($"{product.ABV}%", FontFactory.GetFont("Arial", fontSize - 3)));
+                            }
+                            else
+                            {
+                                p3Cell.AddElement(new Phrase($"", FontFactory.GetFont("Arial", fontSize - 2)));
+                            }
+                            productTable.AddCell(p3Cell);
+                        }
+                        categoryTable.AddCell(productTable);
+                    }
+                    if (currentColumn >= columns)
+                    {
+                        currentColumn = 0;
+                    }
+
+                    columnPlaceholders[currentColumn].AddElement(categoryTable);
+                    if(category == categorylist.Last()) 
+                        currentColumn++;
+                }
             }
 
             foreach (var placeholder in columnPlaceholders)
@@ -227,7 +233,7 @@ namespace AztecTariff.Services
             int columns = catColumns.Count;
 
 
-            AddTablesAndColumns(columns, document, salesArea, fontSize, includeABV);
+            AddTablesAndColumns(columns, document, salesArea, fontSize, includeABV, catColumns);
 
             return "";
         }
@@ -247,21 +253,34 @@ namespace AztecTariff.Services
             messageFont = FontFactory.GetFont("Arial", fontSize);
             document.Add(new Paragraph(salesArea.HeaderMessage, messageFont));
 
-            int linesPerPage = CalculateLinesPerPage(PageSize.A4.Height, 72, 72, fontSize, fontSize * 1.2f) - 10;
+            //int linesPerPage = CalculateLinesPerPage(PageSize.A4.Height, 72, 72, fontSize, fontSize * 1.2f) - 2;
 
 
 
             int columns = 2;
-
-            AddTablesAndColumns(columns, document, salesArea, fontSize, includeABV);
+            var catColumns = SplitList(salesArea.Categories);
+            AddTablesAndColumns(columns, document, salesArea, fontSize, includeABV, catColumns);
 
 
 
             return "";
         }
 
+        public List<List<T>> SplitList<T>(List<T> originalList)
+        {
+            int midPoint = (originalList.Count + 1) / 2; // Middle point, rounded up if odd
+            var list1 = new List<T>(originalList.GetRange(0, midPoint));
+            var list2 = new List<T>(originalList.GetRange(midPoint, originalList.Count - midPoint));
+            return new List<List<T>>
+            {
+                list1,
+                list2
+            };
+        }
+
         public static List<List<FullCategory>> DistributeCategoriesByPage(List<FullCategory> categories, int linesPerPage)
         {
+            linesPerPage = linesPerPage + 10;
 
             List<List<FullCategory>> pages = new List<List<FullCategory>>();
             List<FullCategory> currentPage = new List<FullCategory>();
@@ -290,7 +309,7 @@ namespace AztecTariff.Services
 
         public static int CalculateLinesPerPage(float pageSizeHeight, float marginTop, float marginBottom, float fontSize, float leading)
         {
-            float usableHeight = pageSizeHeight - marginTop - marginBottom;
+            float usableHeight = 1000;// pageSizeHeight - marginTop - marginBottom;
             int linesPerPage = (int)(usableHeight / leading);
 
             return linesPerPage;
@@ -317,7 +336,7 @@ namespace AztecTariff.Services
 
             int columns = catColumns.Count;
 
-            AddTablesAndColumns(columns, document, salesArea, fontSize, includeABV);
+            AddTablesAndColumns(columns, document, salesArea, fontSize, includeABV, catColumns);
 
             return "";
         }
