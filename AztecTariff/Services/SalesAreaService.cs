@@ -44,6 +44,7 @@ namespace AztecTariff.Services
             var salesAreas = await _dbContext.SalesAreas.ToListAsync();
 
             var groupedSalesArea = salesAreas.GroupBy(g => g.SiteId);
+            
             var fullSites = new List<FullSite>();
 
             foreach (var salesArea in groupedSalesArea)
@@ -59,7 +60,7 @@ namespace AztecTariff.Services
                 fullSites.Add(fs);
             }
 
-            return fullSites;
+            return fullSites.OrderBy(x => x.SiteName).ToList();
         }
 
         public async Task<List<FullSalesArea>> GetSitesFullSalesAreasByDate(int id, DateTime date)
@@ -83,11 +84,12 @@ namespace AztecTariff.Services
 
                 fsa.Events = await GetEventBySalesArea(sa.SalesAreaId);
                 fsa.Categories = await _categoryService.GetSalesAreaCategoriesByDate(sa.SalesAreaId, date);
+                fsa.Categories = fsa.Categories.OrderBy(x => x.CategoryName).ToList();
                 //fsa.Categories = await _categoryService.GetSalesAreaCategories(sa.SalesAreaId, date);
 
                 fullsalesareas.Add(fsa);
             }
-            return fullsalesareas;
+            return fullsalesareas.OrderBy(x => x.SalesAreaName).ToList(); ;
         }
 
         public async Task<List<FullEvent>> GetEventBySalesArea(int salesAreaId)

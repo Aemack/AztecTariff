@@ -121,26 +121,40 @@ namespace AztecTariff.Services
 
         public async Task<List<FullProduct>> GetFullProductsByCategoryByDate(int category, int salesAreaId, DateTime date)
         {
-            var fullProds = new List<FullProduct>();
-            var prods = await _dbContext.Products.Where(p => p.CategoryId == category).ToListAsync();
-            foreach(var prod in prods)
+            try
             {
-                var fp = new FullProduct()
+                var fullProds = new List<FullProduct>();
+                var prods = await _dbContext.Products.Where(p => p.CategoryId == category).ToListAsync();
+                foreach (var prod in prods)
                 {
-                    ABV = prod.ABV,
-                    Included = prod.Included,
-                    Portion = prod.Portion,
-                    Price = await _pricingService.GetProductPriceByDate(prod.ProductId, salesAreaId, date),
-                    ProdName = prod.ProdName,
-                    ProductId = prod.ProductId,
-                    ProductTariffName = prod.ProductTariffName,
-                    IncludeInPDF = true,
-                };
+                    try
+                    {
+                        var fp = new FullProduct()
+                        {
+                            ABV = prod.ABV,
+                            Included = prod.Included,
+                            Portion = prod.Portion,
+                            Price = await _pricingService.GetProductPriceByDate(prod.ProductId, salesAreaId, date),
+                            ProdName = prod.ProdName,
+                            ProductId = prod.ProductId,
+                            ProductTariffName = prod.ProductTariffName,
+                            IncludeInPDF = true,
+                        };
 
-                fullProds.Add(fp);
+                        fullProds.Add(fp);
+                    }
+                    catch
+                    {
+                        continue;
+                    }
+                }
+
+                return fullProds;
+            } catch (Exception ex)
+            {
+
+                return new List<FullProduct>();
             }
-
-            return fullProds;
         }
 
         public async Task<List<FullProduct>> GetFullProducts(int category)

@@ -373,6 +373,7 @@ namespace AztecTariff.Pages
         {
 
             isAddEventModalVisible = false;
+            await Task.Delay(1);
             isLoading = true;
             await Task.Delay(1);
             var sa = eventSAModel;

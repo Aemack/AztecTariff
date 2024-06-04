@@ -53,7 +53,7 @@ namespace AztecTariff.Services
             {
                 var cat = await _dbContext.Products.Where(p => p.CategoryId == category).FirstAsync();
                 var fc = new FullCategory();
-                fc.Products = (await _productService.GetFullProductsByCategoryByDate(category, salesAreaId, date)).OrderBy(x => x.ProductTariffName).ToList();
+                fc.Products = (await _productService.GetFullProductsByCategoryByDate(category, salesAreaId, date)).OrderBy(x => x.ProductTariffName).OrderBy(x => x.ProductTariffName).ToList();
                 fc.TariffCategory = cat.TariffCategory;
                 fc.CategoryName  = cat.CategoryName;
                 fc.Id = category;
