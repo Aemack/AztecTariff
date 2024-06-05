@@ -1,16 +1,20 @@
 using AztecTariff;
+using AztecTariff.Data;
 using AztecTariff.Models;
 using AztecTariff.Services;
 using AztecTariffModels.Models;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Internal;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 
+
+builder.Services.AddScoped<TariffDatabaseContextFactory>();
 builder.Services.AddDbContext<TariffDatabaseContext>(opt => opt.UseSqlServer(builder.Configuration.GetConnectionString("TariffDatabase"), b => b.MigrationsAssembly("AztecTariff")));
 builder.Services.AddControllersWithViews();
 

@@ -1,4 +1,5 @@
-﻿using AztecTariff.Models;
+﻿using AztecTariff.Data;
+using AztecTariff.Models;
 using AztecTariffModels.Models;
 using CsvHelper;
 using Microsoft.EntityFrameworkCore;
@@ -11,22 +12,23 @@ namespace AztecTariff.Services
 {
     public class SalesAreaService
     {
-        private readonly TariffDatabaseContext _dbContext;
+        private readonly TariffDatabaseContextFactory _dbContextFactory;
         ProductService _productService;
         CategoryService _categoryService;
         Settings _settings;
 
-        public SalesAreaService(TariffDatabaseContext dbContext, Settings settings)
+        public SalesAreaService(TariffDatabaseContextFactory dbContextFactory, Settings settings)
         {
             _settings = settings;
-            _dbContext = dbContext;
-            _productService = new ProductService(dbContext, settings);
-            _categoryService = new CategoryService(dbContext, settings);
+            _dbContextFactory = dbContextFactory;
+            _productService = new ProductService(dbContextFactory, settings);
+            _categoryService = new CategoryService(dbContextFactory, settings);
         }
 
 
         public async Task AddSalesAreas(List<SalesArea> sites)
         {
+            var _dbContext = _dbContextFactory.CreateDbContext();
             foreach (var site in sites)
             {
                 _dbContext.SalesAreas.Add(site);
@@ -36,11 +38,13 @@ namespace AztecTariff.Services
 
         public async Task<List<SalesArea>> GetAllEvents()
         {
+            var _dbContext = _dbContextFactory.CreateDbContext();
             return await _dbContext.SalesAreas.Where(s => s.isEvent).ToListAsync();
         }
 
         public async Task<List<FullSite>> GetAllFullSitesByDate(DateTime date)
         {
+            var _dbContext = _dbContextFactory.CreateDbContext();
             var salesAreas = await _dbContext.SalesAreas.ToListAsync();
 
             var groupedSalesArea = salesAreas.GroupBy(g => g.SiteId);
@@ -65,6 +69,7 @@ namespace AztecTariff.Services
 
         public async Task<List<FullSalesArea>> GetSitesFullSalesAreasByDate(int id, DateTime date)
         {
+            var _dbContext = _dbContextFactory.CreateDbContext();
             var fullsalesareas = new List<FullSalesArea>();
             var salesareas = await _dbContext.SalesAreas.Where(s => s.SiteId == id && !s.isEvent).ToListAsync();
 
@@ -94,6 +99,7 @@ namespace AztecTariff.Services
 
         public async Task<List<FullEvent>> GetEventBySalesArea(int salesAreaId)
         {
+            var _dbContext = _dbContextFactory.CreateDbContext();
             var ev = await _dbContext.SalesAreas.Where(s => s.OriginalSalesAreaId == salesAreaId).ToListAsync();
             return await ToFullEvents(ev);
         }
@@ -130,17 +136,20 @@ namespace AztecTariff.Services
 
         public async Task<List<SalesArea>> GetAllSites()
         {
+            var _dbContext = _dbContextFactory.CreateDbContext();
             return await _dbContext.SalesAreas.ToListAsync();
         }
 
 
         public async Task<SalesArea> GetSalesArea(int salesAreaId)
         {
+            var _dbContext = _dbContextFactory.CreateDbContext();
             return await _dbContext.SalesAreas.Where(s => s.SalesAreaId == salesAreaId).FirstAsync();
         }
 
         public async Task DeleteSalesArea(int salesAreaId)
         {
+            var _dbContext = _dbContextFactory.CreateDbContext();
             _dbContext.Remove(await _dbContext.SalesAreas.Where(s => s.SalesAreaId == salesAreaId).FirstAsync());
             await _dbContext.SaveChangesAsync();
         }
@@ -148,6 +157,7 @@ namespace AztecTariff.Services
 
         public async Task UpdateSalesArea(SalesArea salesArea)
         {
+            var _dbContext = _dbContextFactory.CreateDbContext();
             var sa = await _dbContext.SalesAreas.Where(s => s.SalesAreaId == salesArea.SalesAreaId).FirstAsync();
             sa.SAName = salesArea.SAName;
             sa.TariffName = salesArea.TariffName;
@@ -162,6 +172,7 @@ namespace AztecTariff.Services
 
         public async Task UpdateSalesArea(FullSalesArea salesArea)
         {
+            var _dbContext = _dbContextFactory.CreateDbContext();
             var sa = await _dbContext.SalesAreas.Where(s => s.SalesAreaId == salesArea.SalesAreaId).FirstAsync();
             sa.TariffName = salesArea.TariffName;
             sa.FooterMessage = salesArea.FooterMessage;
@@ -188,6 +199,7 @@ namespace AztecTariff.Services
 
         public async Task<int> AddSalesArea(SalesArea sa)
         {
+            var _dbContext = _dbContextFactory.CreateDbContext();
             _dbContext.SalesAreas.Add(sa);
             await _dbContext.SaveChangesAsync();
 

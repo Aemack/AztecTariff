@@ -1,4 +1,5 @@
-﻿using AztecTariff.Models;
+﻿using AztecTariff.Data;
+using AztecTariff.Models;
 using AztecTariffModels.Models;
 using System.Reflection.Metadata.Ecma335;
 
@@ -6,17 +7,18 @@ namespace AztecTariff.Services
 {
     public class PDFDataService
     {
-        private readonly TariffDatabaseContext _dbContext;
+        private readonly TariffDatabaseContextFactory _dbContextFactory;
         Settings _settings;
 
-        public PDFDataService(TariffDatabaseContext dbContext, Settings settings)
+        public PDFDataService(TariffDatabaseContextFactory dbContextFactory, Settings settings)
         {
-            _dbContext = dbContext;
+            _dbContextFactory = dbContextFactory;
             _settings = settings;
         }
 
         public async Task<int> UpdatePDFData(PDFData pdfdata)
         {
+            var _dbContext = _dbContextFactory.CreateDbContext();
             var foundEntry = _dbContext.PDFData.Where(x => x.SalesAreaID == pdfdata.SalesAreaID).FirstOrDefault();
             if (foundEntry != null)
             {
@@ -40,6 +42,7 @@ namespace AztecTariff.Services
 
         public async Task<int> UpdatePDFProduct(PDFProduct pdfProd)
         {
+            var _dbContext = _dbContextFactory.CreateDbContext();
             var foundEntry = _dbContext.PDFProducts.Where(x => x.ProductID == pdfProd.ProductID && x.PDFDataId == pdfProd.PDFDataId).FirstOrDefault();
             if (foundEntry != null)
             {
@@ -71,27 +74,32 @@ namespace AztecTariff.Services
 
         public List<PDFData> GetAllPDFData()
         {
+            var _dbContext = _dbContextFactory.CreateDbContext();
             return _dbContext.PDFData.ToList();
         }
 
         public List<PDFProduct> GetAllProductData()
         {
+            var _dbContext = _dbContextFactory.CreateDbContext();
             return _dbContext.PDFProducts.ToList();
         }
 
         public List<PDFProduct> GetProductDataBySite(int pdfDataId)
         {
+            var _dbContext = _dbContextFactory.CreateDbContext();
             return _dbContext.PDFProducts.Where(x => x.PDFDataId == pdfDataId).ToList();
         }
 
         public async Task ClearPDFDataTable()
         {
+            var _dbContext = _dbContextFactory.CreateDbContext();
             _dbContext.PDFData.RemoveRange(_dbContext.PDFData);
             await _dbContext.SaveChangesAsync();
         }
 
         public List<FullPDFData> GetAllFullPDFData()
         {
+            var _dbContext = _dbContextFactory.CreateDbContext();
             var fullpdfdatas = new List<FullPDFData>();
             var pdfdata = GetAllPDFData();
             foreach (var p in pdfdata)
@@ -108,6 +116,7 @@ namespace AztecTariff.Services
 
         public async Task ClearPDFProductTable()
         {
+            var _dbContext = _dbContextFactory.CreateDbContext();
             _dbContext.PDFProducts.RemoveRange(_dbContext.PDFProducts);
             await _dbContext.SaveChangesAsync();
         }

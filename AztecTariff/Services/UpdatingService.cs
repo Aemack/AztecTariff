@@ -1,14 +1,16 @@
-﻿using AztecTariff.Models;
+﻿using AztecTariff.Data;
+using AztecTariff.Models;
 using AztecTariffModels.Models;
 using CsvHelper;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Internal;
 using System.Globalization;
 
 namespace AztecTariff.Services
 {
     public class UpdatingService
     {
-        TariffDatabaseContext context;
+        TariffDatabaseContextFactory contextFactory;
         ProductService productService;
         PricingService pricingService;
         SalesAreaService siteService;
@@ -17,13 +19,13 @@ namespace AztecTariff.Services
         List<SalesArea> Sites;
         List<Pricing> Pricings;
         Settings _settings;
-        public UpdatingService(TariffDatabaseContext _context, Settings settings)
+        public UpdatingService(TariffDatabaseContextFactory _dbContextFactory, Settings settings)
         {
             _settings = settings;
-            context = _context;
-            pricingService = new PricingService(context, settings);
-            productService = new ProductService(context, settings);
-            siteService = new SalesAreaService(context, settings);
+            contextFactory = _dbContextFactory;
+            pricingService = new PricingService(contextFactory, settings);
+            productService = new ProductService(contextFactory, settings);
+            siteService = new SalesAreaService(contextFactory, settings);
             
         }
 

@@ -5,7 +5,8 @@
 @inject Settings settings
 @inject TariffDatabaseContext dbContext
 @inherits BasePageClass
-
+@inject TariffDatabaseContextFactory dbContextFactory
+@using AztecTariff.Data;
 @using AztecTariff.Models;
 @using AztecTariff.Services;
 @using AztecTariffModels.Models;

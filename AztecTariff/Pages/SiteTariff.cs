@@ -11,6 +11,7 @@ using System.IO.Compression;
 using System.IO;
 using Microsoft.AspNetCore.Hosting;
 using AztecTariffModels.Models;
+using System.Linq;
 
 namespace AztecTariff.Pages
 {
@@ -26,7 +27,10 @@ namespace AztecTariff.Pages
         TelerikGrid<FullSalesArea> SAGrid;
         Toast Toast;
 
-
+        bool toastDisplayed;
+        string ToastMessage = "";
+        string ToastColor = "bg-green";
+        string toastCss = "notification-hide";
         FullSite SelectedSite = new FullSite();
         FullSalesArea SelectedSalesArea = new FullSalesArea();
         PDFMakerService pDFMaker;
@@ -36,6 +40,8 @@ namespace AztecTariff.Pages
         FullEvent eventModel;
 
         SummarizedCategory summaryModel;
+        FullSalesArea EditAllFields = new FullSalesArea();
+
         List<string> templateChoices = new List<string>() { "Single-Page", "Multi-Page", "Landscape Multi-Page" };
         List<FullSite> Sites = new List<FullSite>();
         List<FullCategory> SelectedCategories = new List<FullCategory>();
@@ -51,6 +57,7 @@ namespace AztecTariff.Pages
         bool sitesCollapsed;
         bool categoriesCollapsed;
         bool isAddSummaryModalVisible;
+        bool isEditAllSalesAreasVisible;
         string gridClass => (sitesCollapsed && categoriesCollapsed) ? "row p-0 " : "row p-0 grid-container";
         string siteTableClass => (sitesCollapsed) ? "grid-col-collapsed" : "grid-col";
         //string siteTableClass => (sitesCollapsed) ? "grid-col-collapsed p-0" : "grid-col col p-0";
@@ -74,6 +81,7 @@ namespace AztecTariff.Pages
         bool isMultiPrintVisible;
         bool isDeleteEventModalVisible;
         double basePriceMultiplier;
+        bool hasTooManyProductsForSinglePage;
         #endregion
 
 
@@ -90,7 +98,7 @@ namespace AztecTariff.Pages
             pDFMaker = new PDFMakerService(settings);
             MaxDatePickerDate = pricingService.GetMostRecentDate();
             MinDatePickerDate = pricingService.GetEarliestDate();
-            
+
 
             selectedDateValue = MaxDatePickerDate;
 
@@ -215,6 +223,30 @@ namespace AztecTariff.Pages
             isAddSummaryModalVisible = true;
         }
 
+        async Task SaveEditSalesAreas()
+        {
+            isEditAllSalesAreasVisible = false;
+            //isLoading = true;
+            //await Task.Delay(1);
+
+            foreach (var sa in Sites.SelectMany(s => s.SalesAreas))
+            {
+                sa.FooterMessage = EditAllFields.FooterMessage;
+                sa.HeaderMessage = EditAllFields.HeaderMessage;
+            }
+
+            await UpdatePDF();
+            //isLoading = false;
+            //await Task.Delay(1);
+        }
+
+        void EditAllSitesClicked()
+        {
+            EditAllFields.FooterMessage = "";
+            EditAllFields.HeaderMessage = "";
+            isEditAllSalesAreasVisible = true;
+        }
+
         async void SaveCategorySummary()
         {
             isLoading = true;
@@ -266,7 +298,7 @@ namespace AztecTariff.Pages
 
         void SiteChevronClicked(FullSite site)
         {
-            if(site == null) return;
+            if (site == null) return;
             isLoading = true;
             if (SelectedSites.Contains(site))
             {
@@ -285,6 +317,18 @@ namespace AztecTariff.Pages
             await Task.Delay(1);
             SelectedSalesArea = salesArea;
             UpdateAllSelected();
+
+            var x = salesArea.Categories.Sum(x => x.LinesRequired);
+            if (x > 150)
+            {
+                selectedTemplate = "Multi-Page";
+                templateChoices = new List<string>() { "Multi-Page", "Landscape Multi-Page" };
+            }
+            else
+            {
+                templateChoices = new List<string>() { "Single-Page", "Multi-Page", "Landscape Multi-Page" };
+            }
+
             await UpdatePDF();
             isLoading = false;
             await Task.Delay(1);
@@ -313,14 +357,14 @@ namespace AztecTariff.Pages
                 await LoadSites();
                 //UpdateAllSelected();
                 //SelectedSalesArea = Sites.Select(s => s.SalesAreas.Where(sa => sa.SalesAreaId == SelectedSalesArea.SalesAreaId).First()).First();
-                
+
                 
                 await UpdatePDF();
-                await Toast.DisplayMessage("Succesfully Updated Sales Area Price", "bg-green");
+                await ShowToast("Succesfully Updated Sales Area Price", "bg-green");
             }
             catch (Exception ex)
             {
-                await Toast.DisplayMessage("Failed To Update Sales Area Price", "bg-red");
+                await ShowToast("Failed To Update Sales Area Price", "bg-red");
             }
             isLoading = false;
             await OpenSelectedDropdowns();
@@ -373,8 +417,8 @@ namespace AztecTariff.Pages
         {
 
             isAddEventModalVisible = false;
-            await Task.Delay(1);
             isLoading = true;
+                
             await Task.Delay(1);
             var sa = eventSAModel;
             int newSaId = await saService.AddSalesArea(eventSAModel);
@@ -400,16 +444,17 @@ namespace AztecTariff.Pages
 
 
             SelectedSalesArea = newEvent;
-            //await LoadSites();
-            
-            //UpdateAllSelected();
+            await LoadSites();
+
             await UpdatePDF();
 
+            UpdateAllSelected();
             isLoading = false;
             await Task.Delay(1);
+            await ShowToast("Event Created", "bg-primary");
         }
 
-        void RemoveEventPricing(FullEvent fe)
+        async Task RemoveEventPricing(FullEvent fe)
         {
             eventModel = fe;
             isDeleteEventModalVisible = true;
@@ -418,11 +463,17 @@ namespace AztecTariff.Pages
         async Task ConfirmRemoveEventPricing(FullSalesArea fe)
         {
             isLoading = true;
+            isDeleteEventModalVisible = false;
             await saService.DeleteSalesArea(fe.SalesAreaId);
             await pricingService.DeletePricingBySA(fe.SalesAreaId);
+            if(SelectedSalesArea.SalesAreaName == fe.SalesAreaName)
+            {
+                SelectedSalesArea = new FullSalesArea();
+            }
             await LoadSites();
+            await UpdatePDF();
             isLoading = false;
-            isDeleteEventModalVisible = false;
+            await ShowToast("Event Deleted", "bg-primary");
         }
 
         void CloseModal()
@@ -508,6 +559,7 @@ namespace AztecTariff.Pages
             var foundItem = await pricingService.GetProductPricing(EditFullProduct.ProductId, SelectedSalesArea.SalesAreaId, selectedDateValue);
             try
             {
+                if (foundItem == null) throw new Exception("Failed to find product");
                 var x = SelectedSalesArea.Categories.Select(x => x.Products.Where(p => p.ProductId == foundItem.ProductId).ToList());
                 var gridItem = x.First().First();
                 //var gridItem = SelectedSalesArea.Categories.Select(x => x.Products.Where(p => p.ProductId == foundItem.ProductId).First()).First();
@@ -518,14 +570,15 @@ namespace AztecTariff.Pages
                 await Task.Delay(1);
                 await InvokeAsync(() => StateHasChanged());
 
-                await Toast.DisplayMessage("Succesfully Updated Sales Area Price", "bg-green");
+                await ShowToast("Succesfully Updated Sales Area Price", "bg-green");
+                //await ShowToast("Succesfully Updated Sales Area Price", "bg-green");
 
             }
             catch (Exception ex)
             {
-                await Toast.DisplayMessage("Failed To Update Sales Area Price", "bg-red");
+                await ShowToast("Failed To Update Sales Area Price", "bg-red");
             }
-            
+
             await UpdatePDF();
             isLoading = false;
         }
@@ -549,6 +602,7 @@ namespace AztecTariff.Pages
         {
             Console.WriteLine(EditFullProduct);
             await pricingService.UpdatePricingByDate(EditFullProduct.ProductId, EditFullProduct.Price, selectedDateValue);
+            await ShowToast("Price Updated", "gb-primary");
         }
 
         void OnValidSubmit()
@@ -583,6 +637,13 @@ namespace AztecTariff.Pages
         #region PDF
         async Task UpdatePDF()
         {
+            if(SelectedSalesArea == null || SelectedSalesArea.Categories == null)
+            {
+                PdfSource = null;
+                isLoading = false;
+                return;
+            }
+
             if (SelectedSalesArea.Categories.Sum(x => x.LinesRequired) < 5) return;
             docname = pDFMaker.MakePDF(SelectedSalesArea, selectedTemplate, includeAbv);
             if (string.IsNullOrWhiteSpace(docname)) return;
@@ -640,7 +701,7 @@ namespace AztecTariff.Pages
         {
             var exportables = ExportSalesAreas.Where(x => x.Selected).ToList();
             List<string> filePaths = new List<string>();
-            foreach(var e in exportables)
+            foreach (var e in exportables)
             {
                 filePaths.Add(pDFMaker.MakePDF(e, selectedTemplate, includeAbv));
             }
@@ -650,7 +711,7 @@ namespace AztecTariff.Pages
 
         private async Task CreateZipFile(List<string> filePaths)
         {
-            
+
             using (var memoryStream = new MemoryStream())
             {
                 using (var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
@@ -745,5 +806,30 @@ namespace AztecTariff.Pages
             Console.WriteLine($"Object saved to {filename}");
         }
         #endregion
+
+        async Task ShowToast(string text, string color)
+        {
+            toastDisplayed = true;
+            ToastMessage = text;
+            toastCss = "notification-show";
+            ToastColor = color;
+            await InvokeAsync(() => StateHasChanged());
+            Console.WriteLine("Show toast");
+            await Task.Delay(3000);
+            await HideToast();
+
+            //await InvokeAsync(() => StateHasChanged());
+            //await JSRuntime.InvokeVoidAsync("executeAfterDelay", DotNetObjectReference.Create(this), "HideToast", 3000);
+
+        }
+
+        async Task HideToast()
+        {
+            Console.WriteLine("Hiding toast");
+            toastDisplayed = false;
+            toastCss = "notification-hide";
+            await InvokeAsync(() => StateHasChanged());
+        }
+
     }
 }

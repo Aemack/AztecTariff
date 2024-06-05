@@ -3,6 +3,7 @@ using AztecTariff.Services;
 using AztecTariffModels.Models;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
+using Microsoft.EntityFrameworkCore.Internal;
 using Microsoft.Extensions.Configuration;
 using System.Xml.Serialization;
 
@@ -53,11 +54,11 @@ namespace AztecTariff.Pages
 
             if (settings.IsLoggedIn && settings.IsValid())
             {
-                categoryService = new CategoryService(dbContext, settings);
-                pricingService = new PricingService(dbContext, settings);
-                productService = new ProductService(dbContext, settings);
-                siteService = new SalesAreaService(dbContext, settings);
-                pDFDataService = new PDFDataService(dbContext, settings);
+                categoryService = new CategoryService(dbContextFactory, settings);
+                pricingService = new PricingService(dbContextFactory, settings);
+                productService = new ProductService(dbContextFactory, settings);
+                siteService = new SalesAreaService(dbContextFactory, settings);
+                pDFDataService = new PDFDataService(dbContextFactory, settings);
                 nav.NavigateTo("/SiteTariff");
             }
             else if (!settings.IsValid())

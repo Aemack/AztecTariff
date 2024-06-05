@@ -1,21 +1,14 @@
 ﻿@namespace AztecTariff.Shared
 
-@if (isVisible)
-{
-    <div class="toast show @color" role="alert" aria-live="assertive" aria-atomic="true">
+<div class="position-absolute bottom-0 end-0">
+    <div >
         <div class="toast-body">
-            @message
+        
+        <label>Hello world</label>
         </div>
     </div>
-}
-else
-{
-    <div class="toast" role="alert" aria-live="assertive" aria-atomic="true">
-        <div class="toast-body">
-            Hello, world! This is a toast message.
-        </div>
-    </div>
-}
+</div>
+
 @code {
     public bool isVisible { get; set; }
     public string message { get; set; }

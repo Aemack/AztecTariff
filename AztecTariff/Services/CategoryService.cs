@@ -1,4 +1,5 @@
-﻿using AztecTariff.Models;
+﻿using AztecTariff.Data;
+using AztecTariff.Models;
 using AztecTariffModels.Models;
 using CsvHelper;
 using Microsoft.EntityFrameworkCore;
@@ -8,19 +9,20 @@ namespace AztecTariff.Services
 {
     public class CategoryService
     {
-        private readonly TariffDatabaseContext _dbContext;
+        private readonly TariffDatabaseContextFactory _dbContextFactory;
         private readonly ProductService _productService;
         private readonly PricingService _pricingService;
         
 
-        public CategoryService(TariffDatabaseContext dbContext, Settings settings)
+        public CategoryService(TariffDatabaseContextFactory dbContextFactory, Settings settings)
         {
-            _dbContext = dbContext;
-            _productService = new ProductService(dbContext, settings);
+            _dbContextFactory = dbContextFactory;
+            _productService = new ProductService(dbContextFactory, settings);
         }
 
         public async Task<List<FullCategory>> GetSalesAreaCategories(int salesAreaId, DateTime selectedDate)
         {
+            var _dbContext = _dbContextFactory.CreateDbContext();
             var categories = _dbContext.Products.Select(p => p.CategoryId).ToList().Distinct();
             var sumCats = await _dbContext.SummarizedCategories.Where(s => s.SalesAreaID == salesAreaId).ToListAsync();
 
@@ -45,6 +47,7 @@ namespace AztecTariff.Services
 
         public async Task<List<FullCategory>> GetSalesAreaCategoriesByDate(int salesAreaId, DateTime date)
         {
+            var _dbContext = _dbContextFactory.CreateDbContext();
             var categories = _dbContext.Products.Select(p => p.CategoryId).ToList().Distinct();
             var sumCats = await _dbContext.SummarizedCategories.Where(s => s.SalesAreaID == salesAreaId).ToListAsync();
 
@@ -69,6 +72,7 @@ namespace AztecTariff.Services
 
         public async Task<List<FullCategory>> GetAllFullCategories()
         {
+            var _dbContext = _dbContextFactory.CreateDbContext();
             var categories = _dbContext.Products.Select(p => p.CategoryId).ToList().Distinct();
             var fullcats = new List<FullCategory>();
             foreach (var category in categories)
@@ -86,6 +90,7 @@ namespace AztecTariff.Services
 
         public async Task UpdateCategories(List<FullCategory> fullcats)
         {
+            var _dbContext = _dbContextFactory.CreateDbContext();
             var prods = await _productService.GetAllProducts();
             foreach (var fullcat in fullcats)
             {
@@ -101,12 +106,14 @@ namespace AztecTariff.Services
 
         public async Task<List<SummarizedCategory>> GetSitesSummarizedCategories(int salesAreaId)
         {
+            var _dbContext = _dbContextFactory.CreateDbContext();
             return await _dbContext.SummarizedCategories.Where(x => x.SalesAreaID == salesAreaId).ToListAsync();
         }
 
         public async Task UpdateSummarizedCategory(SummarizedCategory sc)
         {
 
+            var _dbContext = _dbContextFactory.CreateDbContext();
             var foundCat = await _dbContext.SummarizedCategories.Where(x => x.Id == sc.Id).FirstOrDefaultAsync();
             if (foundCat != null)
             {
@@ -126,11 +133,13 @@ namespace AztecTariff.Services
 
         public int GetCategoryId(string category)
         {
+            var _dbContext = _dbContextFactory.CreateDbContext();
             return _dbContext.Products.Where(x => x.CategoryName == category).First().CategoryId;
         }
 
         public async Task DeleteSummarizedCategory(FullCategory category, int id)
         {
+            var _dbContext = _dbContextFactory.CreateDbContext();
             var foundEntry = await _dbContext.SummarizedCategories.Where(x => x.SalesAreaID == id && x.Category == category.CategoryName).FirstOrDefaultAsync();
             if (foundEntry != null)
             {
@@ -141,6 +150,7 @@ namespace AztecTariff.Services
 
         public async Task ClearSummarizedCategoriedTable()
         {
+            var _dbContext = _dbContextFactory.CreateDbContext();
             _dbContext.SummarizedCategories.RemoveRange(_dbContext.SummarizedCategories);
             await _dbContext.SaveChangesAsync();
         }

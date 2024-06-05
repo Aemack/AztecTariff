@@ -18,6 +18,7 @@
 @inject HttpClient HttpClient
 @inject CategoryService catService
 @inject SalesAreaService saService
+@inject IJSRuntime JSRuntime
 
 @if (isLoading)
 {
@@ -26,9 +27,15 @@
 
 <div class="container-fluid" style="height:100%">
     @*Toast*@
-    <div class="position-absolute bottom-0 end-0">
-        <Toast @ref="Toast"></Toast>
+    
+        <div class="position-absolute top-0 start-50 @toastCss" style="z-index:10">
+            <div class="bg-primary-alt rounded-bottom-toast">
+            <div class="bg-primary @ToastColor rounded-bottom-toast">
+                <label class="text-white">@ToastMessage</label>
+            </div>
+        </div>
     </div>
+    
 
     <div class="w-100 d-flex flex-row">
 
@@ -57,7 +64,8 @@
                 <button class="btn" @onclick="@MinimiseSites">
                     <span class="oi oi-chevron-left" aria-hidden="true"></span>
                 </button>
-                <label>Sites</label>
+                <label class="flex-fill">Sites</label>
+                <button @onclick="@EditAllSitesClicked" class="btn justify-content-end">EditAll</button>
             </GridToolBarTemplate>
 
             <RowTemplate Context="site">
@@ -481,6 +489,36 @@
 
 
             <TelerikButton OnClick="SaveCategorySummary">Add</TelerikButton>
+        </EditForm>
+
+    </WindowContent>
+    <WindowActions>
+        <WindowAction Name="Close" />
+    </WindowActions>
+</TelerikWindow>
+
+<TelerikWindow Modal="true"
+@bind-Visible="@isEditAllSalesAreasVisible"
+               CloseOnOverlayClick="true">
+    <WindowTitle>
+        Edit All Sales Areas
+    </WindowTitle>
+    <WindowContent>
+
+        <EditForm Model="@EditAllFields">
+            <TelerikStackLayout Orientation="StackLayoutOrientation.Horizontal">
+                <label>Header Message</label>
+                <InputText @bind-Value="EditAllFields.HeaderMessage" />
+            </TelerikStackLayout>
+            
+            <TelerikStackLayout Orientation="StackLayoutOrientation.Horizontal">
+                <label>Footer Message</label>
+                <InputText @bind-Value="EditAllFields.FooterMessage" />
+            </TelerikStackLayout>
+
+
+
+            <TelerikButton OnClick="SaveEditSalesAreas">Save</TelerikButton>
         </EditForm>
 
     </WindowContent>
