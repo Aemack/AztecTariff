@@ -65,7 +65,7 @@
                     <span class="oi oi-chevron-left" aria-hidden="true"></span>
                 </button>
                 <label class="flex-fill">Sites</label>
-                <button @onclick="@EditAllSitesClicked" class="btn justify-content-end">EditAll</button>
+                <button @onclick="@EditAllSitesClicked" class="btn justify-content-end">Edit All</button>
             </GridToolBarTemplate>
 
             <RowTemplate Context="site">
@@ -331,22 +331,22 @@
     <WindowContent>
 
         <EditForm Model="@eventSAModel">
-            <TelerikStackLayout Orientation="StackLayoutOrientation.Horizontal">
+            <TelerikStackLayout class="p-1" Orientation="StackLayoutOrientation.Horizontal">
                 <label>Event Tariff Name</label>
                 <InputText @bind-Value="eventSAModel.TariffName" />
             </TelerikStackLayout>
 
-            <TelerikStackLayout Orientation="StackLayoutOrientation.Horizontal">
+            <TelerikStackLayout class="p-1" Orientation="StackLayoutOrientation.Horizontal">
                 <label>Event Header Message</label>
                 <InputText @bind-Value="eventSAModel.HeaderMessage" />
             </TelerikStackLayout>
 
-            <TelerikStackLayout Orientation="StackLayoutOrientation.Horizontal">
+            <TelerikStackLayout class="p-1" Orientation="StackLayoutOrientation.Horizontal">
                 <label>Event Footer Message</label>
                 <InputText @bind-Value="eventSAModel.FooterMessage" />
             </TelerikStackLayout>
 
-            <TelerikStackLayout Orientation="StackLayoutOrientation.Horizontal">
+            <TelerikStackLayout class="p-1" Orientation="StackLayoutOrientation.Horizontal">
                 <label>Base Price Multiplier</label>
                 <InputNumber @bind-Value="basePriceMultiplier" />
             </TelerikStackLayout>
@@ -472,17 +472,17 @@
                 <label>@summaryModel.Category</label>
             </div>
 
-            <TelerikStackLayout Orientation="StackLayoutOrientation.Horizontal">
+            <TelerikStackLayout class="p-1" Orientation="StackLayoutOrientation.Horizontal">
                 <label>Max Price</label>
                 <InputNumber @bind-Value="summaryModel.MaxPrice" />
             </TelerikStackLayout>
 
-            <TelerikStackLayout Orientation="StackLayoutOrientation.Horizontal">
+            <TelerikStackLayout class="p-1" Orientation="StackLayoutOrientation.Horizontal">
                 <label>Min Price</label>
                 <InputNumber @bind-Value="summaryModel.MinPrice" />
             </TelerikStackLayout>
 
-            <TelerikStackLayout Orientation="StackLayoutOrientation.Horizontal">
+            <TelerikStackLayout class="p-1" Orientation="StackLayoutOrientation.Horizontal">
                 <label>Summary descrption</label>
                 <InputText @bind-Value="summaryModel.SummaryDescription" />
             </TelerikStackLayout>
@@ -506,12 +506,12 @@
     <WindowContent>
 
         <EditForm Model="@EditAllFields">
-            <TelerikStackLayout Orientation="StackLayoutOrientation.Horizontal">
+            <TelerikStackLayout class="p-1" Orientation="StackLayoutOrientation.Horizontal">
                 <label>Header Message</label>
                 <InputText @bind-Value="EditAllFields.HeaderMessage" />
             </TelerikStackLayout>
             
-            <TelerikStackLayout Orientation="StackLayoutOrientation.Horizontal">
+            <TelerikStackLayout class="p-1" Orientation="StackLayoutOrientation.Horizontal">
                 <label>Footer Message</label>
                 <InputText @bind-Value="EditAllFields.FooterMessage" />
             </TelerikStackLayout>

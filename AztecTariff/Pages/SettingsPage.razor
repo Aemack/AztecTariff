@@ -22,12 +22,6 @@
     <button class="btn btn-primary" style="border-radius:10px;" onclick="@SaveSettingsToXML"> <TelerikFontIcon Icon="FontIcon.Save"></TelerikFontIcon> </button>
 </div>
 
-<div class="position-absolute bottom-0 end-0">
-
-    <Toast @ref="Toast"></Toast>
-
-
-</div>
 
 <div class="p-2 h-100 d-flex justify-content-center align-items-center">
     <div class="mybs" style="height:95%;width:95%;border-radius:10px;">
@@ -86,7 +80,6 @@
 @code {
     //Settings settings;
     bool isLoading;
-    Toast Toast;
     public async void SaveSettingsToXML()
     {
 
@@ -105,14 +98,12 @@
                 nav.NavigateTo("/Settings");
 
 
-                await Toast.DisplayMessage("Saved Settings", "bg-green");
 
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error saving settings: {ex.Message}");
                 nav.NavigateTo("/Settings");
-                await Toast.DisplayMessage("Failed To Save Settings", "bg-red");
 
             }
         }
@@ -120,7 +111,6 @@
         {
             Console.WriteLine("Womp womp");
             nav.NavigateTo("/Settings");
-            await Toast.DisplayMessage("Invalid Settings", "bg-red");
         }
 
     }

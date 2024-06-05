@@ -25,7 +25,6 @@ namespace AztecTariff.Pages
         TelerikGrid<FullCategory> CatGrid;
         TelerikGrid<FullProduct> ProdGrid;
         TelerikGrid<FullSalesArea> SAGrid;
-        Toast Toast;
 
         bool toastDisplayed;
         string ToastMessage = "";
@@ -554,10 +553,16 @@ namespace AztecTariff.Pages
         async Task SaveProduct()
         {
             isLoading = true;
-
+            Pricing? foundItem;
             await ExitEditAsync();
-
-            var foundItem = await pricingService.GetProductPricing(EditFullProduct.ProductId, SelectedSalesArea.SalesAreaId, selectedDateValue);
+            if(SelectedSalesArea is FullEvent)
+            {
+                FullEvent fe = (FullEvent)SelectedSalesArea;
+                foundItem = await pricingService.GetProductPricing(EditFullProduct.ProductId, fe.OriginalSalesAreaId, selectedDateValue);
+            } else
+            {
+                foundItem = await pricingService.GetProductPricing(EditFullProduct.ProductId, SelectedSalesArea.SalesAreaId, selectedDateValue);
+            }
             try
             {
                 if (foundItem == null) throw new Exception("Failed to find product");
@@ -817,10 +822,6 @@ namespace AztecTariff.Pages
             await InvokeAsync(() => StateHasChanged());
             await Task.Delay(3000);
             await HideToast();
-
-            //await InvokeAsync(() => StateHasChanged());
-            //await JSRuntime.InvokeVoidAsync("executeAfterDelay", DotNetObjectReference.Create(this), "HideToast", 3000);
-
         }
 
         async Task HideToast()

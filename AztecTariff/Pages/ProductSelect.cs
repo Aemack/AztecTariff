@@ -10,7 +10,6 @@ namespace AztecTariff.Pages
     public partial class ProductSelect : BasePageClass
     {
         #region Props
-        Toast Toast;
         
         TelerikGrid<FullCategory> CategoryGridRef;
         TelerikGrid<FullProduct> ProductGridRef;

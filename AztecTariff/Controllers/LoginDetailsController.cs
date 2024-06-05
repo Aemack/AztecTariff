@@ -1,4 +1,5 @@
-﻿using AztecTariffModels.Models;
+﻿using AztecTariff.Data;
+using AztecTariffModels.Models;
 using Microsoft.AspNetCore.Mvc;
 using System.Text;
 
