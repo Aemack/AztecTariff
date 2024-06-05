@@ -419,7 +419,7 @@ main {
     z-index: 10;
     background: rgba(var(--bs-primary-rgb));
     color: white;
-    border-radius:0px 5px 0px 5px;
+    border-radius:0px 5px 5px 0px;
 }
 
 .grid-container {

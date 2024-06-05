@@ -25,8 +25,14 @@
     </div>
 
     @*Toast*@
-    <div class="position-absolute bottom-0 end-0">
-        <Toast @ref="Toast"></Toast>
+    @*Toast*@
+
+    <div class="position-absolute top-0 start-50 @toastCss" style="z-index:10">
+        <div class="bg-primary-alt rounded-bottom-toast">
+            <div class="bg-primary @ToastColor rounded-bottom-toast">
+                <label class="text-white">@ToastMessage</label>
+            </div>
+        </div>
     </div>
 
     <div class="container-fluid p-0" style="height:100%;">

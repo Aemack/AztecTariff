@@ -19,7 +19,13 @@ namespace AztecTariff.Pages
         List<FullCategory> OpenHeadings = new List<FullCategory>();
         List<FullProduct> SelectedProducts = new List<FullProduct>();
         
-        FullCategory SelectedCategory = new FullCategory();        
+        FullCategory SelectedCategory = new FullCategory();
+
+
+        bool toastDisplayed;
+        string ToastMessage = "";
+        string ToastColor = "bg-green";
+        string toastCss = "notification-hide";
 
         int rowCount = 0;
         bool AllSelected;
@@ -185,11 +191,11 @@ namespace AztecTariff.Pages
                 await Task.Delay(1);
                 await InvokeAsync(() => StateHasChanged());
 
-                await Toast.DisplayMessage("Succesfully Updated Categories", "bg-green");
+                await ShowToast("Succesfully Updated Categories", "bg-green");
             }
             catch
             {
-                await Toast.DisplayMessage("Failed To Update Categories", "bg-red");
+                await ShowToast("Failed To Update Categories", "bg-red");
             }
 
         }
@@ -209,5 +215,24 @@ namespace AztecTariff.Pages
 
         }
         #endregion
+
+
+        async Task ShowToast(string text, string color)
+        {
+            toastDisplayed = true;
+            ToastMessage = text;
+            toastCss = "notification-show";
+            ToastColor = color;
+            await InvokeAsync(() => StateHasChanged());
+            await Task.Delay(3000);
+            await HideToast();
+        }
+
+        async Task HideToast()
+        {
+            toastDisplayed = false;
+            toastCss = "notification-hide";
+            await InvokeAsync(() => StateHasChanged());
+        }
     }
 }

@@ -63,8 +63,8 @@ namespace AztecTariff.Pages
         //string siteTableClass => (sitesCollapsed) ? "grid-col-collapsed p-0" : "grid-col col p-0";
         string categoryTableClass => (categoriesCollapsed) ? "grid-col-collapsed" : "grid-col";
         //string categoryTableClass => (categoriesCollapsed) ? "grid-col-collapsed p-0" : "grid-col col p-0";
-        string sitesButtonClass => (sitesCollapsed) ? "btn overlay-button-1" : "d-none";
-        string categoryButtonClass => (categoriesCollapsed) ? "btn overlay-button-1" : "d-none";
+        string sitesButtonClass => (sitesCollapsed) ? "overlay-button-1" : "d-none";
+        string categoryButtonClass => (categoriesCollapsed) ? "overlay-button-1" : "d-none";
 
         DateTime MaxDatePickerDate;
         DateTime MinDatePickerDate;
@@ -313,6 +313,7 @@ namespace AztecTariff.Pages
 
         async Task SalesAreaSelected(FullSalesArea salesArea)
         {
+            if (salesArea == null) return;
             isLoading = true;
             await Task.Delay(1);
             SelectedSalesArea = salesArea;
@@ -814,7 +815,6 @@ namespace AztecTariff.Pages
             toastCss = "notification-show";
             ToastColor = color;
             await InvokeAsync(() => StateHasChanged());
-            Console.WriteLine("Show toast");
             await Task.Delay(3000);
             await HideToast();
 
@@ -825,7 +825,6 @@ namespace AztecTariff.Pages
 
         async Task HideToast()
         {
-            Console.WriteLine("Hiding toast");
             toastDisplayed = false;
             toastCss = "notification-hide";
             await InvokeAsync(() => StateHasChanged());
